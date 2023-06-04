@@ -1,4 +1,4 @@
-# Contributing to Placeholder
+# Contributing to SuperFluent
 
 We love your input! We want to make contributing to this project as easy and transparent as possible, whether it's:
 
@@ -28,9 +28,9 @@ Pull requests are the best way to propose changes to the codebase (we use [Githu
 
 In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
 
-## Report Bugs Using Github's [issues](https://github.com/hughesjs/dotnet-7-ci-cd-template/issues)
+## Report Bugs Using Github's [issues](https://github.com/hughesjs/SuperFluid/issues)
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/hughesjs/dotnet-7-ci-cd-template/issues/new); it's that easy!
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/hughesjs/SuperFluid/issues/new); it's that easy!
 
 ## Write Bug Reports with Detail, Background, and Sample Code
 

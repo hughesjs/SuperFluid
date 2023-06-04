@@ -1,4 +1,4 @@
-namespace Placeholder.Tests;
+namespace SuperFluent.Tests;
 
 public class UnitTest1
 {

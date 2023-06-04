@@ -7,12 +7,12 @@
         <LangVersion>default</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Version>0.0.1</Version>
-        <Title>Placeholder</Title>
-        <Authors>hughesjs</Authors>
+        <Title>SuperFluent</Title>
+        <Authors>James Hughes</Authors>
         <Description>My package description</Description>
-        <PackageProjectUrl>https://github.com/hughesjs/dotnet-7-ci-cd-template</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/hughesjs/dotnet-7-ci-cd-template/blob/master/LICENSE</PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/hughesjs/dotnet-7-ci-cd-template.git</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/James Hughes/dotnet-7-ci-cd-template</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/James Hughes/dotnet-7-ci-cd-template/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/James Hughes/dotnet-7-ci-cd-template.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReadmeFile>./README.md</PackageReadmeFile>
     </PropertyGroup>
