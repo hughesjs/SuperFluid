@@ -1,0 +1,85 @@
+name: .NET Continuous Deployment
+
+on:
+  push:
+    branches: [ master ]
+    paths: 
+      - src/Placeholder/**
+  workflow_dispatch:
+jobs:
+
+  test:
+    name: Test Project
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+    - name: Run tests
+      run: dotnet test --logger GitHubActions ./src/Placeholder.sln
+
+  semantic-release:
+    if: ${{ false }} # Delete this line once you actually want to do releases
+    needs: test
+    name: Create a Package Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3 # Need the full commit history for conventional commit
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create a GitHub release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.tag_version.outputs.new_tag }}
+        name: Release ${{ steps.tag_version.outputs.new_tag }}
+        body: ${{ steps.tag_version.outputs.changelog }}
+    - name: Create Nuget Package
+      run: dotnet build -c Release ./src/Placeholder/Placeholder.csproj && dotnet pack -c Release -p:PackageVersion=${{ steps.tag_version.outputs.new_version }} -o . ./src/Placeholder/Placeholder.csproj
+    - name: Upload Package for Publishing
+      uses: actions/upload-artifact@v3
+      with:
+        name: PackedLib
+        path: ./*.nupkg
+
+
+  github-publish:
+    needs: semantic-release
+    name: Publish to Github
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download built project  
+      uses: actions/download-artifact@v3
+      with:
+        name: PackedLib
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+    - name: Push Package to GitHub
+      run: dotnet nuget push --api-key ${{secrets.GITHUB_TOKEN}} --source "https://nuget.pkg.github.com/hughesjs/index.json" *.nupkg
+
+
+  nuget-publish:
+    needs: semantic-release
+    name: Publish to Nuget
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download built project  
+      uses: actions/download-artifact@v3
+      with:
+        name: PackedLib
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+    - name: Push Package to Nuget
+      run: dotnet nuget push --api-key ${{secrets.NUGET_KEY}} --source "https://api.nuget.org/v3/index.json" *.nupkg
