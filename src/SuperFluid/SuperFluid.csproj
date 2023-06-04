@@ -7,18 +7,25 @@
         <LangVersion>default</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Version>0.0.1</Version>
-        <Title>SuperFluent</Title>
+        <Title>SuperFluid</Title>
         <Authors>James Hughes</Authors>
         <Description>My package description</Description>
-        <PackageProjectUrl>https://github.com/James Hughes/dotnet-7-ci-cd-template</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/James Hughes/dotnet-7-ci-cd-template/blob/master/LICENSE</PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/James Hughes/dotnet-7-ci-cd-template.git</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/hughesjs/SuperFluid</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/hughesjs/SuperFluid/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/hughesjs/SuperFluid.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReadmeFile>./README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="../../README.md" Pack="true" PackagePath="\"/>
+        <None Include="../../README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Public\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="SuperFluid.Tests" />
+    </ItemGroup>
 </Project>
