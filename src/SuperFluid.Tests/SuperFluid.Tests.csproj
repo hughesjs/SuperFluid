@@ -29,7 +29,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SuperFluid\SuperFluid.csproj" />
+        <ProjectReference Include="../SuperFluid/SuperFluid.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="true" />
     </ItemGroup>
 
 </Project>
