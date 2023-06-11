@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using SuperFluid.Internal.Grammar;
+using SuperFluid.Internal.Services;
 
 namespace SuperFluid.Tests.Conventions;
 
@@ -17,7 +17,7 @@ public class AccessModifierTests
 	}
 
 
-	public static IEnumerable<object[]> PublicClassDataGenerator() => typeof(State).Assembly.GetTypes()
+	public static IEnumerable<object[]> PublicClassDataGenerator() => typeof(FluidGeneratorService).Assembly.GetTypes()
 																								  .Where(t => t.Namespace != null && t.Namespace.Contains(InternalFragment))
 																								  .Where(t => t.GetCustomAttribute<CompilerGeneratedAttribute>() is null)
 																								  .Select(t => new object[] {t});

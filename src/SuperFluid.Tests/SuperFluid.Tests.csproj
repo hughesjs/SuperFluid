@@ -4,9 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-
         <IsPackable>false</IsPackable>
-
         <LangVersion>default</LangVersion>
     </PropertyGroup>
 
@@ -26,12 +24,24 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="YamlDotNet" Version="13.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../SuperFluid/SuperFluid.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="true" />
+        <ProjectReference Include="../SuperFluid/SuperFluid.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.CodeAnalysis">
+        <HintPath>..\..\..\..\..\..\usr\share\dotnet\sdk\7.0.105\Roslyn\bincore\Microsoft.CodeAnalysis.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.CodeAnalysis.CSharp">
+        <HintPath>..\..\..\..\..\..\usr\share\dotnet\sdk\7.0.105\Roslyn\bincore\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <SuperFluidDefinition Include="./DemoApiDefinition.yml" />
     </ItemGroup>
 
 </Project>

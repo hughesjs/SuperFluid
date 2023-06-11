@@ -15,7 +15,7 @@
         <RepositoryUrl>https://github.com/hughesjs/SuperFluid.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReadmeFile>./README.md</PackageReadmeFile>
-        <!--<IncludeBuildOutput>false</IncludeBuildOutput> -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,10 +29,31 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+        <PackageReference Include="YamlDotNet" Version="13.1.0" PrivateAssets="all" GeneratePathProperty="true"/>
     </ItemGroup>
-
+    
+    <!-- Gross hack to let source generator use nuget packages -->
+    <PropertyGroup>
+        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+    </PropertyGroup>
+    
+    <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">
+            <ItemGroup>
+                <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />
+                <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            </ItemGroup>
+    </Target>
+    <!-- End Hack -->
+    
+    
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Public\" />
+    </ItemGroup>
+
+
     
 </Project>
