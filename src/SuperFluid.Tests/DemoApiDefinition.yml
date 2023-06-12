@@ -7,7 +7,6 @@ Methods:
         - "Lock"
   - Name: "Lock"
     AvailableFrom:
-        - "Initialize"
         - "Unlock"
         - "Exit"
   - Name: "Enter"

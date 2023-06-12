@@ -36,7 +36,7 @@ internal class FluidApiDefinitionParser
 		return model;
 	}
 
-	private FluidApiState? FindOrCreateMethod(string methodName, Dictionary<string, FluidApiState> stateDict)
+	private FluidApiState FindOrCreateMethod(string methodName, Dictionary<string, FluidApiState> stateDict)
 	{
 		if (stateDict.TryGetValue(methodName, out FluidApiState? state))
 		{
@@ -44,13 +44,14 @@ internal class FluidApiDefinitionParser
 		}
 
 		FluidApiState newState = new(methodName);
+		stateDict.Add(newState.Name, newState);
+		
 		foreach (string availableFrom in _definition.Methods.Single(m => m.Name == methodName).AvailableFrom)
 		{
 			FluidApiState availableState = FindOrCreateMethod(availableFrom, stateDict);
 			newState.AvailableFrom.Add(availableState);
 		}
-
-		stateDict.Add(newState.Name, newState);
+		
 		return newState;
 	}
 }
