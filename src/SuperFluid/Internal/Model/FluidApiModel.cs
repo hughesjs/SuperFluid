@@ -2,7 +2,7 @@ namespace SuperFluid.Internal.Model;
 
 internal record FluidApiModel
 {
-	public string        Name         { get; init; }
-	public FluidApiState InitialState { get; init; }
-	public List<FluidApiState> States       { get; init; }
+	public required string              Name         { get; init; }
+	public required FluidApiState       InitialState { get; init; }
+	public          List<FluidApiState> States       { get; init; } = new();
 }
