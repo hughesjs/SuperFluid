@@ -46,10 +46,10 @@ internal class FluidApiDefinitionParser
 		FluidApiState newState = new(methodName);
 		stateDict.Add(newState.Name, newState);
 		
-		foreach (string availableFrom in _definition.Methods.Single(m => m.Name == methodName).AvailableFrom)
+		foreach (string availableFrom in _definition.Methods.Single(m => m.Name == methodName).CanTransitionTo)
 		{
 			FluidApiState availableState = FindOrCreateMethod(availableFrom, stateDict);
-			newState.AvailableFrom.Add(availableState);
+			newState.CanTransitionTo.Add(availableState);
 		}
 		
 		return newState;

@@ -1,27 +1,28 @@
 Name: "ICarActor"
 InitialState:
   Name: "Initialize"
-  AvailableFrom: []
+  CanTransitionTo: 
+    - "Unlock"
 Methods:
   - Name: "Unlock"
-    AvailableFrom:
-      - "Initialize"
+    CanTransitionTo:
       - "Lock"
+      - "Enter"
   - Name: "Lock"
-    AvailableFrom:
+    CanTransitionTo:
       - "Unlock"
-      - "Exit"
   - Name: "Enter"
-    AvailableFrom:
-      - "Unlock"
+    CanTransitionTo:
+      - "Start"
       - "Exit"
   - Name: "Exit"
-    AvailableFrom:
+    CanTransitionTo:
+      - "Lock"
       - "Enter"
-      - "Stop"
   - Name: "Start"
-    AvailableFrom:
-      - "Enter"
+    CanTransitionTo:
+      - "Stop"
   - Name: "Stop"
-    AvailableFrom:
+    CanTransitionTo:
       - "Start"
+      - "Exit"

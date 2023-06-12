@@ -9,15 +9,15 @@ public class FluidApiDefinitionParserTests
 	private readonly FluidApiMethodDefinition _init = new()
 													  {
 														  Name = "Initialize",
-														  AvailableFrom = new()
+														  CanTransitionTo = new()
 													  };
 
 	private readonly FluidApiMethodDefinition _unlock = new()
 														{
 															Name = "Unlock",
-															AvailableFrom = new()
+															CanTransitionTo = new()
 																			{
-																				"Initialize",
+																				"Enter",
 																				"Lock"
 																			}
 														};
@@ -25,19 +25,18 @@ public class FluidApiDefinitionParserTests
 	private readonly FluidApiMethodDefinition _lock = new()
 													  {
 														  Name = "Lock",
-														  AvailableFrom = new()
+														  CanTransitionTo = new()
 																		  {
-																			  "Unlock",
-																			  "Exit"
+																			  "Unlock"
 																		  }
 													  };
 	
 	private readonly FluidApiMethodDefinition _enter = new()
 													   {
 														   Name = "Enter",
-														   AvailableFrom = new()
+														   CanTransitionTo = new()
 																		   {
-																			   "Unlock",
+																			   "Start",
 																			   "Exit"
 																		   }
 													   };
@@ -45,38 +44,36 @@ public class FluidApiDefinitionParserTests
 	private readonly FluidApiMethodDefinition _exit = new()
 													  {
 														  Name = "Exit",
-														  AvailableFrom = new()
+														  CanTransitionTo = new()
 																		  {
-																			  "Enter",
-																			  "Stop"
+																			  "Lock",
+																			  "Enter"
 																		  }
 													  };
 	
 	private readonly FluidApiMethodDefinition _start = new()
 													   {
 														   Name = "Start",
-														   AvailableFrom = new()
+														   CanTransitionTo = new()
 																		   {
-																			   "Enter"
+																			   "Stop"
 																		   }
 													   };
 	
 	private readonly FluidApiMethodDefinition _stop = new()
 													  {
 														  Name = "Stop",
-														  AvailableFrom = new()
+														  CanTransitionTo = new()
 																		  {
-																			  "Start"
+																			  "Start",
+																			  "Exit"
 																		  }
 													  };
 
 	private readonly FluidApiMethodDefinition _dropDead = new()
 														  {
 															  Name = "DropDead",
-															  AvailableFrom = new()
-																			  {
-																				  "Initialize"
-																			  }
+															  CanTransitionTo = new()
 														  };
 
 	[Fact]
@@ -98,13 +95,12 @@ public class FluidApiDefinitionParserTests
 
 		FluidApiState initState = model.InitialState;
 		initState.Name.ShouldBe("Initialize");
-		initState.AvailableFrom.ShouldBeEmpty();
+		initState.CanTransitionTo.ShouldBeEmpty();
 		model.States.First().ShouldBe(initState);
 
 		FluidApiState deadState = model.States.Single(s => s.Name == "DropDead");
 		deadState.Name.ShouldBe("DropDead");
-		deadState.AvailableFrom.Count.ShouldBe(1);
-		deadState.AvailableFrom.ShouldContain(initState);
+		deadState.CanTransitionTo.ShouldBeEmpty();
 	}
 
 	[Fact]
@@ -131,7 +127,7 @@ public class FluidApiDefinitionParserTests
 
 		FluidApiState initState = model.InitialState;
 		initState.Name.ShouldBe("Initialize");
-		initState.AvailableFrom.ShouldBeEmpty();
+		initState.CanTransitionTo.ShouldBeEmpty();
 		model.States.First().ShouldBe(initState);
 		
 		FluidApiState lockState = model.States.Single(s => s.Name == "Lock");
@@ -141,12 +137,12 @@ public class FluidApiDefinitionParserTests
 		FluidApiState startState = model.States.Single(s => s.Name == "Start");
 		FluidApiState stopState = model.States.Single(s => s.Name == "Stop");
 		
-		lockState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState>{ unlockState, exitState });
-		unlockState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { initState, lockState });
-		enterState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { unlockState, exitState });
-		exitState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, stopState });
-		startState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { enterState });
-		stopState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { startState });
+		lockState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState>{ unlockState });
+		unlockState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, lockState });
+		enterState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { startState, exitState });
+		exitState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, lockState });
+		startState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { stopState });
+		stopState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { startState, exitState });
 	}
 
 }
