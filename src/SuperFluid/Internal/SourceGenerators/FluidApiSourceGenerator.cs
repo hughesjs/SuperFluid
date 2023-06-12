@@ -11,14 +11,18 @@ namespace SuperFluid.Internal.SourceGenerators;
 [Generator]
 internal class FluidApiSourceGenerator : ISourceGenerator
 {
-	private FluidGeneratorService _generatorService;
+	private readonly FluidGeneratorService _generatorService;
+
+	public FluidApiSourceGenerator()
+	{
+		IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
+		_generatorService = new(deserializer);
+	}
 	public void Initialize(GeneratorInitializationContext context)
 	{
 		#if DEBUG
-		//SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
+		SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 		#endif
-		IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
-		_generatorService = new(deserializer);
 	}
 
 	public void Execute(GeneratorExecutionContext context)
