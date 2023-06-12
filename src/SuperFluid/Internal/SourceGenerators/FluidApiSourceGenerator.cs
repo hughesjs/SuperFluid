@@ -15,7 +15,7 @@ internal class FluidApiSourceGenerator : ISourceGenerator
 	public void Initialize(GeneratorInitializationContext context)
 	{
 		#if DEBUG
-		SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
+		//SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 		#endif
 		IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
 		_generatorService = new(deserializer);
