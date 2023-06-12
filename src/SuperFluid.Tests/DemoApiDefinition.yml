@@ -1,25 +1,27 @@
 Name: "ICarActor"
-InitialState: "Initialize"
+InitialState:
+  Name: "Initialize"
+  AvailableFrom: []
 Methods:
   - Name: "Unlock"
     AvailableFrom:
-        - "Initialize"
-        - "Lock"
+      - "Initialize"
+      - "Lock"
   - Name: "Lock"
     AvailableFrom:
-        - "Unlock"
-        - "Exit"
+      - "Unlock"
+      - "Exit"
   - Name: "Enter"
     AvailableFrom:
-        - "Unlock"
-        - "Exit"
+      - "Unlock"
+      - "Exit"
   - Name: "Exit"
     AvailableFrom:
-        - "Enter"
-        - "Stop"
+      - "Enter"
+      - "Stop"
   - Name: "Start"
     AvailableFrom:
-        - "Enter"
+      - "Enter"
   - Name: "Stop"
     AvailableFrom:
-        - "Start"
+      - "Start"

@@ -1,6 +1,8 @@
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.Model;
 using SuperFluid.Internal.Parsers;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace SuperFluid.Tests.Parsers;
 
@@ -139,6 +141,65 @@ public class FluidApiDefinitionParserTests
 		FluidApiState exitState = model.States.Single(s => s.Name == "Exit");
 		FluidApiState startState = model.States.Single(s => s.Name == "Start");
 		FluidApiState stopState = model.States.Single(s => s.Name == "Stop");
+		
+		lockState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState>{ unlockState, exitState });
+		unlockState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { initState, lockState });
+		enterState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { unlockState, exitState });
+		exitState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, stopState });
+		startState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { enterState });
+		stopState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { startState });
+	}
+
+	[Fact]
+	public void CanParseFromText()
+	{
+		const string rawYml = """
+							Name: "ICarActor"
+							InitialState:
+							  Name: "Initialize"
+							  AvailableFrom: []
+							Methods:
+							  - Name: "Unlock"
+							    AvailableFrom:
+							        - "Initialize"
+							        - "Lock"
+							  - Name: "Lock"
+							    AvailableFrom:
+							        - "Unlock"
+							        - "Exit"
+							  - Name: "Enter"
+							    AvailableFrom:
+							        - "Unlock"
+							        - "Exit"
+							  - Name: "Exit"
+							    AvailableFrom:
+							        - "Enter"
+							        - "Stop"
+							  - Name: "Start"
+							    AvailableFrom:
+							        - "Enter"
+							  - Name: "Stop"
+							    AvailableFrom:
+							        - "Start"
+							""";
+
+		FluidApiDefinition def = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build().Deserialize<FluidApiDefinition>(rawYml);
+		
+		FluidApiDefinitionParser parser = new(def);
+		
+		FluidApiModel model = parser.Parse();
+
+		FluidApiState initState = model.InitialState;
+		initState.Name.ShouldBe("Initialize");
+		initState.AvailableFrom.ShouldBeEmpty();
+		model.States.First().ShouldBe(initState);
+		
+		FluidApiState lockState   = model.States.Single(s => s.Name == "Lock");
+		FluidApiState unlockState = model.States.Single(s => s.Name == "Unlock");
+		FluidApiState enterState  = model.States.Single(s => s.Name == "Enter");
+		FluidApiState exitState   = model.States.Single(s => s.Name == "Exit");
+		FluidApiState startState  = model.States.Single(s => s.Name == "Start");
+		FluidApiState stopState   = model.States.Single(s => s.Name == "Stop");
 		
 		lockState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState>{ unlockState, exitState });
 		unlockState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { initState, lockState });
