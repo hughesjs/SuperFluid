@@ -7,6 +7,6 @@ internal record FluidApiState
 		Name = name;
 	}
 
-	internal string Name { get; init; }
-	internal List<FluidApiState> AvailableFrom { get; init; } = new();
+	internal string Name { get; set; }
+	internal List<FluidApiState> AvailableFrom { get; set; } = new();
 }
