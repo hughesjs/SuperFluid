@@ -86,9 +86,15 @@ public class FluidApiDefinitionParserTests
 		FluidApiDefinitionParser parser = new(definition);
 		
 		FluidApiModel model = parser.Parse();
-		
-		model.InitialState.Name.ShouldBe("Initialize");
-		model.States.Single().Name.ShouldBe("DropDead");
-		model.States.Single().AvailableFrom.Single().Name.ShouldBe("Initialize");
+
+		FluidApiState initState = model.States.First();
+		initState.Name.ShouldBe("Initialize");
+		initState.AvailableFrom.ShouldBeEmpty();
+		model.InitialState.ShouldBe(initState);
+
+		FluidApiState deadState = model.States.Single(s => s.Name == "DropDead");
+		deadState.Name.ShouldBe("DropDead");
+		deadState.AvailableFrom.Count.ShouldBe(1);
+		deadState.AvailableFrom.ShouldContain(initState);
 	}
 }
