@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFluent", "SuperFluent\SuperFluent.csproj", "{358F1678-E215-4B95-835B-2FE10EEFCC73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFluid", "SuperFluid\SuperFluid.csproj", "{358F1678-E215-4B95-835B-2FE10EEFCC73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFluent.Tests", "SuperFluent.Tests\SuperFluent.Tests.csproj", "{6C2B21F8-301C-4062-9C12-608DAF4C0E16}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFluid.Tests", "SuperFluid.Tests\SuperFluid.Tests.csproj", "{6C2B21F8-301C-4062-9C12-608DAF4C0E16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,9 @@ Global
 		{6C2B21F8-301C-4062-9C12-608DAF4C0E16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C2B21F8-301C-4062-9C12-608DAF4C0E16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C2B21F8-301C-4062-9C12-608DAF4C0E16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     paths: 
-      - src/SuperFluent/**
+      - src/SuperFluid/**
   workflow_dispatch:
 jobs:
 
@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: 7.0.x
     - name: Run tests
-      run: dotnet test --logger GitHubActions ./src/SuperFluent.sln
+      run: dotnet test --logger GitHubActions ./src/SuperFluid.sln
 
   semantic-release:
     if: ${{ false }} # Delete this line once you actually want to do releases
@@ -43,7 +43,7 @@ jobs:
         name: Release ${{ steps.tag_version.outputs.new_tag }}
         body: ${{ steps.tag_version.outputs.changelog }}
     - name: Create Nuget Package
-      run: dotnet build -c Release ./src/SuperFluent/SuperFluent.csproj && dotnet pack -c Release -p:PackageVersion=${{ steps.tag_version.outputs.new_version }} -o . ./src/SuperFluent/SuperFluent.csproj
+      run: dotnet build -c Release ./src/SuperFluid/SuperFluid.csproj && dotnet pack -c Release -p:PackageVersion=${{ steps.tag_version.outputs.new_version }} -o . ./src/SuperFluid/SuperFluid.csproj
     - name: Upload Package for Publishing
       uses: actions/upload-artifact@v3
       with:
