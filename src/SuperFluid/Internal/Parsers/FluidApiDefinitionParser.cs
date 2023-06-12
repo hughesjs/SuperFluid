@@ -14,7 +14,7 @@ internal class FluidApiDefinitionParser
 
 	public FluidApiModel Parse()
 	{
-		FluidApiState initialState = new(_definition.InitialState);
+		FluidApiState initialState = new(_definition.InitialState.Name);
 
 		Dictionary<string, FluidApiState> stateDict = new()
 													  {

@@ -84,7 +84,7 @@ public class FluidApiDefinitionParserTests
 		FluidApiDefinition definition = new()
 										{
 											Name         = "Simple",
-											InitialState = "Initialize",
+											InitialState = _init,
 											Methods      = new()
 														   {
 															   _dropDead
@@ -112,7 +112,7 @@ public class FluidApiDefinitionParserTests
 		FluidApiDefinition definition = new()
 										{
 											Name         = "Simple",
-											InitialState = "Initialize",
+											InitialState = _init,
 											Methods = new()
 													  {
 														  _lock,
@@ -146,6 +146,5 @@ public class FluidApiDefinitionParserTests
 		exitState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, stopState });
 		startState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { enterState });
 		stopState.AvailableFrom.ShouldBeEquivalentTo(new List<FluidApiState> { startState });
-		
 	}
 }
