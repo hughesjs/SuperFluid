@@ -1,57 +1,97 @@
 using SuperFluid.Internal.Definitions;
+using SuperFluid.Internal.EqualityComparers;
 using SuperFluid.Internal.Model;
 
 namespace SuperFluid.Internal.Parsers;
 
 internal class FluidApiDefinitionParser
 {
-	private readonly FluidApiDefinition _definition;
-
-	public FluidApiDefinitionParser(FluidApiDefinition definition)
+	public FluidApiModel Parse(FluidApiDefinition definition)
 	{
-		_definition = definition;
-	}
-
-	public FluidApiModel Parse()
-	{
-		FluidApiState initialState = new(_definition.InitialState.Name);
-
-		Dictionary<string, FluidApiState> stateDict = new()
-													  {
-														  {initialState.Name, initialState}
-													  };
-
-		foreach (FluidApiMethodDefinition method in _definition.Methods)
-		{
-			FindOrCreateMethod(method.Name, stateDict);
-		}
+		List<FluidApiMethod> methods = GetMethods(definition, out FluidApiMethod initialMethod);
+		List<FluidApiState>  states  = GetMinimalStates(methods, initialMethod, out FluidApiState initialState);
 
 		FluidApiModel model = new()
 							  {
-								  Name         = _definition.Name,
-								  InitialState = initialState,
-								  States       = stateDict.Values.ToList()
+								  Name                         = definition.Name,
+								  Namespace                    = definition.Namespace,
+								  InitialMethod                = initialMethod,
+								  Methods                      = methods,
+								  InitializerMethodReturnState = initialState,
+								  States                       = states
 							  };
 
 		return model;
 	}
 
-	private FluidApiState FindOrCreateMethod(string methodName, Dictionary<string, FluidApiState> stateDict)
+	private List<FluidApiMethod> GetMethods(FluidApiDefinition definition, out FluidApiMethod initialMethod)
 	{
-		if (stateDict.TryGetValue(methodName, out FluidApiState? state))
+		Dictionary<FluidApiMethodDefinition, FluidApiMethod> methodDict = new();
+
+		IEnumerable<FluidApiMethodDefinition> allMethods = definition.Methods.Append(definition.InitialState);
+		foreach (FluidApiMethodDefinition method in allMethods)
+		{
+			FindOrCreateMethod(definition, method, methodDict);
+		}
+
+		initialMethod = FindOrCreateMethod(definition, definition.InitialState, methodDict);
+
+		return methodDict.Values.ToList();
+	}
+
+	private List<FluidApiState> GetMinimalStates(List<FluidApiMethod> methods, FluidApiMethod initialMethod, out FluidApiState initializerReturnState)
+	{
+		List<HashSet<FluidApiMethod>> transitionSets = methods
+													  .Select(m => m.CanTransitionTo)
+													  .Distinct(new HashSetSetEqualityComparer<FluidApiMethod>())
+													  .ToList();
+
+		Dictionary<HashSet<FluidApiMethod>, FluidApiState> transitionSetStateDict = new(new HashSetSetEqualityComparer<FluidApiMethod>());
+		foreach (HashSet<FluidApiMethod> transitionSet in transitionSets)
+		{
+			FindOrCreateState(transitionSet, transitionSetStateDict);
+		}
+
+		initializerReturnState = FindOrCreateState(initialMethod.CanTransitionTo, transitionSetStateDict);
+
+		List<FluidApiState> states = transitionSetStateDict.Values.Where(s => s.MethodTransitions.Count > 0).ToList();
+		return states;
+	}
+
+	private FluidApiState FindOrCreateState(HashSet<FluidApiMethod> transitionSet, Dictionary<HashSet<FluidApiMethod>, FluidApiState> transitionSetStateDict)
+	{
+		if (transitionSetStateDict.TryGetValue(transitionSet, out FluidApiState? state))
 		{
 			return state;
 		}
 
-		FluidApiState newState = new(methodName);
-		stateDict.Add(newState.Name, newState);
-		
-		foreach (string availableFrom in _definition.Methods.Single(m => m.Name == methodName).AvailableFrom)
+		FluidApiState newState = new(new());
+		transitionSetStateDict.Add(transitionSet, newState);
+
+		foreach (FluidApiMethod method in transitionSet)
 		{
-			FluidApiState availableState = FindOrCreateMethod(availableFrom, stateDict);
-			newState.AvailableFrom.Add(availableState);
+			FluidApiState destinationState = FindOrCreateState(method.CanTransitionTo, transitionSetStateDict);
+			newState.MethodTransitions.Add(method, destinationState);
 		}
-		
+
 		return newState;
+	}
+
+
+	private FluidApiMethod FindOrCreateMethod(FluidApiDefinition definition, FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
+	{
+		if (stateDict.TryGetValue(method, out FluidApiMethod? state))
+		{
+			return state;
+		}
+		FluidApiMethod newMethod = new(method.Name, method.ReturnType, ArraySegment<FluidApiMethod>.Empty);
+		stateDict.Add(method, newMethod);
+
+		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => definition.Methods.Single(d => d.Name == m)).ToList();
+		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(definition, td, stateDict)).ToList();
+
+		transitionMethods.ForEach(t => newMethod.CanTransitionTo.Add(t));
+
+		return newMethod;
 	}
 }

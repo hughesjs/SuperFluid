@@ -14,12 +14,11 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 	public FluidApiSourceGenerator()
 	{
 		IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
-		_generatorService = new(deserializer);
+		_generatorService = new(deserializer, new());
 	}
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-
 		//SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
 		IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
@@ -29,8 +28,11 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 
 		context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
 													   {
-														   string generatedSource = _generatorService.Generate(nameAndContent.Content);
-														   spc.AddSource($"{nameAndContent.Name}.g.cs", generatedSource);
+														   Dictionary<string, string> generatedSource = _generatorService.Generate(nameAndContent.Content);
+														   foreach ((string fileName, string source) in generatedSource)
+														   {
+															   spc.AddSource(fileName, source);
+														   }
 													   });
 	}
 }

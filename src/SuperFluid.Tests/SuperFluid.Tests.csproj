@@ -7,6 +7,7 @@
         <IsPackable>false</IsPackable>
         <LangVersion>default</LangVersion>
         <OutputType>Library</OutputType>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <ItemGroup>
