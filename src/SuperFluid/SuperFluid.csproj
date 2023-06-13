@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>default</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.0.2</Version>
+        <Version>0.0.1</Version>
         <Title>SuperFluid</Title>
         <Authors>James Hughes</Authors>
         <Description>An incremental source generator for fluent APIs with grammar</Description>
