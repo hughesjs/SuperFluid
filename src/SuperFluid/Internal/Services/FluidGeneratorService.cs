@@ -23,8 +23,23 @@ internal class FluidGeneratorService
 		FluidApiModel model = _definitionParser.Parse(definition);
 
 		Dictionary<string, string> newSourceFiles = model.States.ToDictionary(s => $"{s.Name}.fluid.g.cs", s => GenerateStateSource(s, model));
+		
+		newSourceFiles.Add($"{model.Name}.fluid.g.cs", GenerateCompoundInterface(model));
 
 		return newSourceFiles;
+	}
+
+	private string GenerateCompoundInterface(FluidApiModel model)
+	{
+		string source = $$"""
+							namespace {{model.Namespace}};
+
+							public interface {{model.Name}}: {{string.Join(',', model.States.Select(s => s.Name))}}
+							{
+								public static abstract {{model.InitializerMethodReturnState.Name}} {{model.InitialMethod.Name}}();
+							}
+							""";
+		return source;
 	}
 
 	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model)

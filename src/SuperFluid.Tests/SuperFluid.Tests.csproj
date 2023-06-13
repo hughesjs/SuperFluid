@@ -7,7 +7,6 @@
         <IsPackable>false</IsPackable>
         <LangVersion>default</LangVersion>
         <OutputType>Library</OutputType>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,10 +30,4 @@
     <ItemGroup>
         <ProjectReference Include="../SuperFluid/SuperFluid.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
-
-  
-    <ItemGroup>
-        <AdditionalFiles Include="**/*.fluid.yml" />
-    </ItemGroup>
-
 </Project>

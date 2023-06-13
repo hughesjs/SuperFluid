@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFluid", "SuperFluid\Su
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFluid.Tests", "SuperFluid.Tests\SuperFluid.Tests.csproj", "{6C2B21F8-301C-4062-9C12-608DAF4C0E16}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoProject", "DemoProject\DemoProject.csproj", "{FA0C7E98-6910-4226-A706-B9B0A0D529A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,5 +24,9 @@ Global
 		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F49EE144-4D5A-4C5A-93ED-1BE64AFF5D7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA0C7E98-6910-4226-A706-B9B0A0D529A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA0C7E98-6910-4226-A706-B9B0A0D529A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA0C7E98-6910-4226-A706-B9B0A0D529A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA0C7E98-6910-4226-A706-B9B0A0D529A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
