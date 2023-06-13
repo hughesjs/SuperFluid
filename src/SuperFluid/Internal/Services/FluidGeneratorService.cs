@@ -8,21 +8,22 @@ namespace SuperFluid.Internal.Services;
 internal class FluidGeneratorService
 {
 	private readonly IDeserializer            _yamlDeserializer;
+	private readonly FluidApiDefinitionParser _definitionParser;
 
-	public FluidGeneratorService(IDeserializer yamlDeserializer)
+	public FluidGeneratorService(IDeserializer yamlDeserializer, FluidApiDefinitionParser definitionParser)
 	{
 		_yamlDeserializer = yamlDeserializer;
+		_definitionParser = definitionParser;
 	}
 
-	public Dictionary<string,string> Generate(string rawYml)
+	public Dictionary<string, string> Generate(string rawYml)
 	{
 		FluidApiDefinition definition = _yamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
 
-		FluidApiDefinitionParser parser = new();
-		FluidApiModel            model  = parser.Parse(definition);
-		
+		FluidApiModel model = _definitionParser.Parse(definition);
+
 		Dictionary<string, string> newSourceFiles = model.States.ToDictionary(s => $"{s.Name}.fluid.g.cs", s => GenerateStateSource(s, model));
-		
+
 		return newSourceFiles;
 	}
 
@@ -32,7 +33,7 @@ internal class FluidGeneratorService
 																							=> $"""
 																									public {kvp.Value.Name} {kvp.Key.Name}();
 																								""");
-		
+
 		string source = $$"""
 						namespace {{model.Namespace}};
 						

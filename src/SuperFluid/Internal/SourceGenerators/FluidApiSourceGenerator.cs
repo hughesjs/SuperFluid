@@ -14,12 +14,12 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 	public FluidApiSourceGenerator()
 	{
 		IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
-		_generatorService = new(deserializer);
+		_generatorService = new(deserializer, new());
 	}
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
+		//SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
 		IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
 		IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts.Select((text, cancellationToken)
