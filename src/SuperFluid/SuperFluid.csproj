@@ -9,7 +9,7 @@
         <Version>0.0.1</Version>
         <Title>SuperFluid</Title>
         <Authors>James Hughes</Authors>
-        <Description>My package description</Description>
+        <Description>An incremental source generator for fluent APIs with grammar</Description>
         <PackageProjectUrl>https://github.com/hughesjs/SuperFluid</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/hughesjs/SuperFluid/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/hughesjs/SuperFluid.git</RepositoryUrl>

@@ -21,7 +21,6 @@ jobs:
       run: dotnet test --logger GitHubActions ./src/SuperFluid.sln
 
   semantic-release:
-    if: ${{ false }} # Delete this line once you actually want to do releases
     needs: test
     name: Create a Package Release
     runs-on: ubuntu-latest
