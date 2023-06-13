@@ -14,44 +14,38 @@ internal class FluidApiDefinitionParser
 
 	public FluidApiModel Parse()
 	{
-		FluidApiState initialState = new(_definition.InitialState.Name);
+		Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict = new();
 
-		Dictionary<string, FluidApiState> stateDict = new()
-													  {
-														  {initialState.Name, initialState}
-													  };
-
-		foreach (FluidApiMethodDefinition method in _definition.Methods)
+		foreach (FluidApiMethodDefinition method in _definition.Methods.Append(_definition.InitialState))
 		{
-			FindOrCreateMethod(method.Name, stateDict);
+			FindOrCreateMethod(method, stateDict);
 		}
+		
+		FluidApiMethod initialMethod = FindOrCreateMethod(_definition.InitialState, stateDict);
 
 		FluidApiModel model = new()
 							  {
-								  Name         = _definition.Name,
-								  InitialState = initialState,
-								  States       = stateDict.Values.ToList()
+								  Name          = _definition.Name,
+								  InitialMethod = initialMethod, //TODO
+								  States        = stateDict.Values.ToList()
 							  };
 
 		return model;
 	}
 
-	private FluidApiState FindOrCreateMethod(string methodName, Dictionary<string, FluidApiState> stateDict)
+	private FluidApiMethod FindOrCreateMethod(FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
 	{
-		if (stateDict.TryGetValue(methodName, out FluidApiState? state))
+		if (stateDict.TryGetValue(method, out FluidApiMethod? state))
 		{
 			return state;
 		}
-
-		FluidApiState newState = new(methodName);
-		stateDict.Add(newState.Name, newState);
+		FluidApiMethod                 newMethod             = new(method.Name, new());
+		stateDict.Add(method, newMethod);
 		
-		foreach (string availableFrom in _definition.Methods.Single(m => m.Name == methodName).CanTransitionTo)
-		{
-			FluidApiState availableState = FindOrCreateMethod(availableFrom, stateDict);
-			newState.CanTransitionTo.Add(availableState);
-		}
+		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => _definition.Methods.Single(d => d.Name == m)).ToList();
+		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(td, stateDict)).ToList();
 		
-		return newState;
+		newMethod.CanTransitionTo.AddRange(transitionMethods);
+		return newMethod;
 	}
 }

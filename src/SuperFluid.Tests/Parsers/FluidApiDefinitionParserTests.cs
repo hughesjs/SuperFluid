@@ -10,6 +10,17 @@ public class FluidApiDefinitionParserTests
 													  {
 														  Name = "Initialize",
 														  CanTransitionTo = new()
+																			{
+																				"Unlock"
+																			}
+													  };
+	private readonly FluidApiMethodDefinition _initSimple = new()
+													  {
+														  Name = "Initialize",
+														  CanTransitionTo = new()
+																			{
+																				"DropDead"
+																			}
 													  };
 
 	private readonly FluidApiMethodDefinition _unlock = new()
@@ -82,7 +93,7 @@ public class FluidApiDefinitionParserTests
 		FluidApiDefinition definition = new()
 										{
 											Name         = "Simple",
-											InitialState = _init,
+											InitialState = _initSimple,
 											Methods      = new()
 														   {
 															   _dropDead
@@ -91,16 +102,17 @@ public class FluidApiDefinitionParserTests
 		
 		FluidApiDefinitionParser parser = new(definition);
 		
-		FluidApiModel model = parser.Parse();
-
-		FluidApiState initState = model.InitialState;
-		initState.Name.ShouldBe("Initialize");
-		initState.CanTransitionTo.ShouldBeEmpty();
-		model.States.First().ShouldBe(initState);
-
-		FluidApiState deadState = model.States.Single(s => s.Name == "DropDead");
-		deadState.Name.ShouldBe("DropDead");
-		deadState.CanTransitionTo.ShouldBeEmpty();
+		FluidApiModel  model      = parser.Parse();
+		
+		FluidApiMethod deadMethod = model.States.Single(s => s.Name == "DropDead");
+		deadMethod.Name.ShouldBe("DropDead");
+		deadMethod.CanTransitionTo.ShouldBeEmpty();
+		
+		FluidApiMethod initMethod = model.InitialMethod;
+		initMethod.Name.ShouldBe("Initialize");
+		initMethod.CanTransitionTo.ShouldContain(deadMethod);
+		
+		model.States.ShouldContain(initMethod);
 	}
 
 	[Fact]
@@ -125,24 +137,25 @@ public class FluidApiDefinitionParserTests
 		
 		FluidApiModel model = parser.Parse();
 
-		FluidApiState initState = model.InitialState;
-		initState.Name.ShouldBe("Initialize");
-		initState.CanTransitionTo.ShouldBeEmpty();
-		model.States.First().ShouldBe(initState);
+		FluidApiMethod lockMethod   = model.States.Single(s => s.Name == _lock.Name);
+		FluidApiMethod unlockMethod = model.States.Single(s => s.Name == _unlock.Name);
+		FluidApiMethod enterMethod  = model.States.Single(s => s.Name == _enter.Name);
+		FluidApiMethod exitMethod   = model.States.Single(s => s.Name == _exit.Name);
+		FluidApiMethod startMethod  = model.States.Single(s => s.Name == _start.Name);
+		FluidApiMethod stopMethod   = model.States.Single(s => s.Name == _stop.Name);
 		
-		FluidApiState lockState = model.States.Single(s => s.Name == "Lock");
-		FluidApiState unlockState = model.States.Single(s => s.Name == "Unlock");
-		FluidApiState enterState = model.States.Single(s => s.Name == "Enter");
-		FluidApiState exitState = model.States.Single(s => s.Name == "Exit");
-		FluidApiState startState = model.States.Single(s => s.Name == "Start");
-		FluidApiState stopState = model.States.Single(s => s.Name == "Stop");
+		FluidApiMethod initMethod = model.InitialMethod;
+		initMethod.Name.ShouldBe(_init.Name);
+		model.States.ShouldContain(initMethod);
 		
-		lockState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState>{ unlockState });
-		unlockState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, lockState });
-		enterState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { startState, exitState });
-		exitState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { enterState, lockState });
-		startState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { stopState });
-		stopState.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiState> { startState, exitState });
+
+		initMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod>{unlockMethod});
+		lockMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod>{ unlockMethod });
+		unlockMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { enterMethod, lockMethod });
+		enterMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { startMethod, exitMethod });
+		exitMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { enterMethod, lockMethod });
+		startMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { stopMethod });
+		stopMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { startMethod, exitMethod });
 	}
 
 }
