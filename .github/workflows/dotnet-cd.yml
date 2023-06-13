@@ -21,6 +21,7 @@ jobs:
       run: dotnet test --logger GitHubActions ./src/SuperFluid.sln
 
   semantic-release:
+    permissions: write-all
     needs: test
     name: Create a Package Release
     runs-on: ubuntu-latest
@@ -51,6 +52,7 @@ jobs:
 
 
   github-publish:
+    permissions: write-all
     needs: semantic-release
     name: Publish to Github
     runs-on: ubuntu-latest
