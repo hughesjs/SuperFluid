@@ -20,17 +20,32 @@ internal class FluidApiDefinitionParser
 		{
 			FindOrCreateMethod(method, stateDict);
 		}
-		
-		FluidApiMethod initialMethod = FindOrCreateMethod(_definition.InitialState, stateDict);
+
+		List<FluidApiMethod> methods       = stateDict.Values.ToList();
+		FluidApiMethod       initialMethod = FindOrCreateMethod(_definition.InitialState, stateDict);
+
+		List<List<FluidApiMethod>> minimalTransitionSets = GetMinimalTransitionSets(methods);
+		List<FluidApiState>        states                = minimalTransitionSets.Select(ts => new FluidApiState(ts)).ToList();
+		FluidApiState              initialState          = states.Single(s => s.CanTransitionTo.SequenceEqual(initialMethod.CanTransitionTo));
 
 		FluidApiModel model = new()
 							  {
 								  Name          = _definition.Name,
-								  InitialMethod = initialMethod, //TODO
-								  States        = stateDict.Values.ToList()
+								  InitialMethod = initialMethod,
+								  Methods       = methods,
+								  InitialState  = initialState,
+								  States        = states
 							  };
 
 		return model;
+	}
+
+	private List<List<FluidApiMethod>> GetMinimalTransitionSets(List<FluidApiMethod> methods)
+	{
+		List<List<FluidApiMethod>> transitionSets = methods.Select(m => m.CanTransitionTo)
+														   .DistinctBy(transitions => string.Join(',', transitions.Select(t => t.Name).Order()))
+														   .ToList();
+		return transitionSets;
 	}
 
 	private FluidApiMethod FindOrCreateMethod(FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
@@ -39,12 +54,12 @@ internal class FluidApiDefinitionParser
 		{
 			return state;
 		}
-		FluidApiMethod                 newMethod             = new(method.Name, new());
+		FluidApiMethod newMethod = new(method.Name, new());
 		stateDict.Add(method, newMethod);
-		
+
 		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => _definition.Methods.Single(d => d.Name == m)).ToList();
 		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(td, stateDict)).ToList();
-		
+
 		newMethod.CanTransitionTo.AddRange(transitionMethods);
 		return newMethod;
 	}

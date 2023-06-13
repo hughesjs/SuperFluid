@@ -104,7 +104,7 @@ public class FluidApiDefinitionParserTests
 		
 		FluidApiModel  model      = parser.Parse();
 		
-		FluidApiMethod deadMethod = model.States.Single(s => s.Name == "DropDead");
+		FluidApiMethod deadMethod = model.Methods.Single(s => s.Name == "DropDead");
 		deadMethod.Name.ShouldBe("DropDead");
 		deadMethod.CanTransitionTo.ShouldBeEmpty();
 		
@@ -112,7 +112,7 @@ public class FluidApiDefinitionParserTests
 		initMethod.Name.ShouldBe("Initialize");
 		initMethod.CanTransitionTo.ShouldContain(deadMethod);
 		
-		model.States.ShouldContain(initMethod);
+		model.Methods.ShouldContain(initMethod);
 	}
 
 	[Fact]
@@ -137,16 +137,16 @@ public class FluidApiDefinitionParserTests
 		
 		FluidApiModel model = parser.Parse();
 
-		FluidApiMethod lockMethod   = model.States.Single(s => s.Name == _lock.Name);
-		FluidApiMethod unlockMethod = model.States.Single(s => s.Name == _unlock.Name);
-		FluidApiMethod enterMethod  = model.States.Single(s => s.Name == _enter.Name);
-		FluidApiMethod exitMethod   = model.States.Single(s => s.Name == _exit.Name);
-		FluidApiMethod startMethod  = model.States.Single(s => s.Name == _start.Name);
-		FluidApiMethod stopMethod   = model.States.Single(s => s.Name == _stop.Name);
+		FluidApiMethod lockMethod   = model.Methods.Single(s => s.Name == _lock.Name);
+		FluidApiMethod unlockMethod = model.Methods.Single(s => s.Name == _unlock.Name);
+		FluidApiMethod enterMethod  = model.Methods.Single(s => s.Name == _enter.Name);
+		FluidApiMethod exitMethod   = model.Methods.Single(s => s.Name == _exit.Name);
+		FluidApiMethod startMethod  = model.Methods.Single(s => s.Name == _start.Name);
+		FluidApiMethod stopMethod   = model.Methods.Single(s => s.Name == _stop.Name);
 		
 		FluidApiMethod initMethod = model.InitialMethod;
 		initMethod.Name.ShouldBe(_init.Name);
-		model.States.ShouldContain(initMethod);
+		model.Methods.ShouldContain(initMethod);
 		
 
 		initMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod>{unlockMethod});
