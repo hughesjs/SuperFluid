@@ -148,14 +148,13 @@ public class FluidApiDefinitionParserTests
 		initMethod.Name.ShouldBe(_init.Name);
 		model.Methods.ShouldContain(initMethod);
 		
-
-		initMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod>{unlockMethod});
-		lockMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod>{ unlockMethod });
-		unlockMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { enterMethod, lockMethod });
-		enterMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { startMethod, exitMethod });
-		exitMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { enterMethod, lockMethod });
-		startMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { stopMethod });
-		stopMethod.CanTransitionTo.ShouldBeEquivalentTo(new List<FluidApiMethod> { startMethod, exitMethod });
+		initMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod>{unlockMethod});
+		lockMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod>{ unlockMethod });
+		unlockMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { enterMethod, lockMethod });
+		enterMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { startMethod, exitMethod });
+		exitMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { enterMethod, lockMethod });
+		startMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { stopMethod });
+		stopMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { startMethod, exitMethod });
 	}
 
 }

@@ -1,13 +1,16 @@
+using System.Diagnostics;
+
 namespace SuperFluid.Internal.Model;
 
+[DebuggerDisplay("{Name}")]
 internal record FluidApiMethod
 {
-	public FluidApiMethod(string name, List<FluidApiMethod> transitions)
+	public FluidApiMethod(string name, IEnumerable<FluidApiMethod> transitions)
 	{
 		Name = name;
-		CanTransitionTo = transitions;
+		CanTransitionTo = transitions.ToHashSet();
 	}
 
 	internal string              Name            { get; init; }
-	internal List<FluidApiMethod> CanTransitionTo { get; init; } = new();
+	internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = new();
 }

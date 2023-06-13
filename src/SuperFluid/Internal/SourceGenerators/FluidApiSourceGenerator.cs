@@ -29,8 +29,11 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 
 		context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
 													   {
-														   string generatedSource = _generatorService.Generate(nameAndContent.Content);
-														   spc.AddSource($"{nameAndContent.Name}.g.cs", generatedSource);
+														   Dictionary<string, string> generatedSource = _generatorService.Generate(nameAndContent.Content);
+														   foreach ((string fileName, string source) in generatedSource)
+														   {
+															   spc.AddSource(fileName, source);
+														   }
 													   });
 	}
 }

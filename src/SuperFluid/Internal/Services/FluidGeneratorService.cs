@@ -15,16 +15,24 @@ internal class FluidGeneratorService
 		_yamlDeserializer = yamlDeserializer;
 	}
 
-	public string Generate(string rawYml)
+	public Dictionary<string,string> Generate(string rawYml)
 	{
 		FluidApiDefinition definition = _yamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
 
 		FluidApiDefinitionParser parser = new(definition);
 		FluidApiModel            model  = parser.Parse();
 		
-		return "";
+		Dictionary<string, string> newSourceFiles = model.States.ToDictionary(s => $"{model.Name}.fluid.g.cs", s => GenerateStateSource(s, model));
+		
+		return newSourceFiles;
 	}
 
+	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model)
+	{
+		
+		
+		throw new NotImplementedException();
+	}
 
 
 }

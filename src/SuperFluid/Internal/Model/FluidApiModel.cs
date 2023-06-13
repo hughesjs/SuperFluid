@@ -1,5 +1,8 @@
+using System.Diagnostics;
+
 namespace SuperFluid.Internal.Model;
 
+[DebuggerDisplay("{Name}")]
 internal record FluidApiModel
 {
 	public required string              Name         { get; init; }

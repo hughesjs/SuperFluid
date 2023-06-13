@@ -1,4 +1,5 @@
 using SuperFluid.Internal.Definitions;
+using SuperFluid.Internal.EqualityComparers;
 using SuperFluid.Internal.Model;
 
 namespace SuperFluid.Internal.Parsers;
@@ -24,9 +25,8 @@ internal class FluidApiDefinitionParser
 		List<FluidApiMethod> methods       = stateDict.Values.ToList();
 		FluidApiMethod       initialMethod = FindOrCreateMethod(_definition.InitialState, stateDict);
 
-		List<List<FluidApiMethod>> minimalTransitionSets = GetMinimalTransitionSets(methods);
-		List<FluidApiState>        states                = minimalTransitionSets.Select(ts => new FluidApiState(ts)).ToList();
-		FluidApiState              initialState          = states.Single(s => s.CanTransitionTo.SequenceEqual(initialMethod.CanTransitionTo));
+		List<FluidApiState> states       = GetMinimalStates(methods);
+		FluidApiState       initialState = states.Single(s => s.CanTransitionTo.SequenceEqual(initialMethod.CanTransitionTo));
 
 		FluidApiModel model = new()
 							  {
@@ -40,12 +40,21 @@ internal class FluidApiDefinitionParser
 		return model;
 	}
 
-	private List<List<FluidApiMethod>> GetMinimalTransitionSets(List<FluidApiMethod> methods)
+	private List<FluidApiState> GetMinimalStates(List<FluidApiMethod> methods)
 	{
-		List<List<FluidApiMethod>> transitionSets = methods.Select(m => m.CanTransitionTo)
-														   .DistinctBy(transitions => string.Join(',', transitions.Select(t => t.Name).Order()))
-														   .ToList();
-		return transitionSets;
+		IEnumerable<HashSet<FluidApiMethod>> transitionSets = methods.Select(m => m.CanTransitionTo)
+																	 .Distinct(new HashSetSetEqualityComparer<FluidApiMethod>());
+
+		List<FluidApiState> states = new();
+		foreach (HashSet<FluidApiMethod> transitionSet in transitionSets)
+		{
+			IEnumerable<FluidApiMethod> methodsWithTransitionSet = methods.Where(m => m.CanTransitionTo.SetEquals(transitionSet));
+			FluidApiState               newState                 = new(transitionSet, methodsWithTransitionSet);
+			states.Add(newState);
+		}
+
+
+		return states;
 	}
 
 	private FluidApiMethod FindOrCreateMethod(FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
@@ -54,13 +63,14 @@ internal class FluidApiDefinitionParser
 		{
 			return state;
 		}
-		FluidApiMethod newMethod = new(method.Name, new());
+		FluidApiMethod newMethod = new(method.Name, ArraySegment<FluidApiMethod>.Empty);
 		stateDict.Add(method, newMethod);
 
 		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => _definition.Methods.Single(d => d.Name == m)).ToList();
 		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(td, stateDict)).ToList();
 
-		newMethod.CanTransitionTo.AddRange(transitionMethods);
+		transitionMethods.ForEach(t => newMethod.CanTransitionTo.Add(t));
+
 		return newMethod;
 	}
 }
