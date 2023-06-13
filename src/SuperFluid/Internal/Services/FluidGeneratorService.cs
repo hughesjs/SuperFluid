@@ -22,7 +22,7 @@ internal class FluidGeneratorService
 		FluidApiDefinitionParser parser = new(definition);
 		FluidApiModel            model  = parser.Parse();
 		
-		Dictionary<string, string> newSourceFiles = model.States.ToDictionary(s => $"{model.Name}.fluid.g.cs", s => GenerateStateSource(s, model));
+		Dictionary<string, string> newSourceFiles = model.States.ToDictionary(s => $"{s.Name}.fluid.g.cs", s => GenerateStateSource(s, model));
 		
 		return newSourceFiles;
 	}

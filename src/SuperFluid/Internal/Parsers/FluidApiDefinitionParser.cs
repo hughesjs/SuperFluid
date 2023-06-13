@@ -15,46 +15,49 @@ internal class FluidApiDefinitionParser
 
 	public FluidApiModel Parse()
 	{
-		Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict = new();
-
-		foreach (FluidApiMethodDefinition method in _definition.Methods.Append(_definition.InitialState))
-		{
-			FindOrCreateMethod(method, stateDict);
-		}
-
-		List<FluidApiMethod> methods       = stateDict.Values.ToList();
-		FluidApiMethod       initialMethod = FindOrCreateMethod(_definition.InitialState, stateDict);
-
-		List<FluidApiState> states       = GetMinimalStates(methods, initialMethod);
-		FluidApiState       initialState = states.Single(s => s.MethodTransitions.Keys.Contains(initialMethod));
+		List<FluidApiMethod> methods = GetMethods(out FluidApiMethod initialMethod);
+		List<FluidApiState>  states  = GetMinimalStates(methods, initialMethod, out FluidApiState initialState);
 
 		FluidApiModel model = new()
 							  {
-								  Name          = _definition.Name,
-								  Namespace     = _definition.Namespace,
-								  InitialMethod = initialMethod,
-								  Methods       = methods,
-								  InitialState  = initialState,
-								  States        = states
+								  Name                         = _definition.Name,
+								  Namespace                    = _definition.Namespace,
+								  InitialMethod                = initialMethod,
+								  Methods                      = methods,
+								  InitializerMethodReturnState = initialState,
+								  States                       = states
 							  };
 
 		return model;
 	}
 
-	private List<FluidApiState> GetMinimalStates(List<FluidApiMethod> methods, FluidApiMethod initialMethod)
+	private List<FluidApiMethod> GetMethods(out FluidApiMethod initialMethod)
+	{
+		Dictionary<FluidApiMethodDefinition, FluidApiMethod> methodDict = new();
+
+		foreach (FluidApiMethodDefinition method in _definition.Methods.Append(_definition.InitialState))
+		{
+			FindOrCreateMethod(method, methodDict);
+		}
+
+		initialMethod = FindOrCreateMethod(_definition.InitialState, methodDict);
+
+		return methodDict.Values.ToList();
+	}
+
+	private List<FluidApiState> GetMinimalStates(List<FluidApiMethod> methods, FluidApiMethod initialMethod, out FluidApiState initializerReturnState)
 	{
 		List<HashSet<FluidApiMethod>> transitionSets = methods.Select(m => m.CanTransitionTo)
 															  .Distinct(new HashSetSetEqualityComparer<FluidApiMethod>())
 															  .ToList();
-		
+
 		Dictionary<HashSet<FluidApiMethod>, FluidApiState> transitionSetStateDict = new(new HashSetSetEqualityComparer<FluidApiMethod>());
 		foreach (HashSet<FluidApiMethod> transitionSet in transitionSets)
 		{
 			FindOrCreateState(transitionSet, transitionSetStateDict);
 		}
-		
-		// Add in the initial method, it won't be found initially as nothing transitions into it, might be worth revisiting this
-		transitionSetStateDict[initialMethod.CanTransitionTo].MethodTransitions.Add(initialMethod, FindOrCreateState(initialMethod.CanTransitionTo, transitionSetStateDict));
+
+		initializerReturnState = FindOrCreateState(initialMethod.CanTransitionTo, transitionSetStateDict);
 
 		List<FluidApiState> states = transitionSetStateDict.Values.ToList();
 		return states;
@@ -75,10 +78,9 @@ internal class FluidApiDefinitionParser
 			FluidApiState destinationState = FindOrCreateState(method.CanTransitionTo, transitionSetStateDict);
 			newState.MethodTransitions.Add(method, destinationState);
 		}
-		
+
 		return newState;
 	}
-
 
 
 	private FluidApiMethod FindOrCreateMethod(FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
