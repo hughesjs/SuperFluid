@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using SuperFluid.Internal.Services;
 using YamlDotNet.Serialization;
@@ -19,7 +20,7 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 
-		//SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
+		SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
 		IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
 		IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts.Select((text, cancellationToken)

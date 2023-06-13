@@ -2,11 +2,12 @@ namespace SuperFluid.Internal.Model;
 
 internal record FluidApiState
 {
-	public FluidApiState(string name)
+	public FluidApiState(List<FluidApiMethod> transitions)
 	{
-		Name = name;
+		Name = $"ICan{transitions.Select(t => t.Name).Aggregate((a, b) => $"{a}Or{b}")}";
+		CanTransitionTo = transitions;
 	}
 
-	internal string              Name            { get; init; }
-	internal List<FluidApiState> CanTransitionTo { get; init; } = new();
+	internal string               Name            { get; init; }
+	internal List<FluidApiMethod> CanTransitionTo { get; init; } = new();
 }
