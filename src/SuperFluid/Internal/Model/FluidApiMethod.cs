@@ -12,8 +12,8 @@ internal record FluidApiMethod
 		CanTransitionTo = transitions.ToHashSet();
 	}
 
-	internal string              Name            { get; init; }
-	
-	internal string? ReturnType { get; init; }
+	internal string Name { get; init; }
+
+	internal string?                 ReturnType      { get; init; }
 	internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = new();
 }
