@@ -5,15 +5,12 @@ namespace SuperFluid.Internal.Model;
 [DebuggerDisplay("{Name}")]
 internal record FluidApiState
 {
-	internal string                  Name            { get; init; }
-	internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = new();
-	internal HashSet<FluidApiMethod> Methods         { get; init; } = new();
+	internal string  Name => $"ICan{MethodTransitions.Keys.Select(t => t.Name).Aggregate((a, b) => $"{a}Or{b}")}";
+	internal Dictionary<FluidApiMethod, FluidApiState> MethodTransitions { get; init; } = new();
 
-	public FluidApiState(IEnumerable<FluidApiMethod> transitions, IEnumerable<FluidApiMethod> methods)
+	public FluidApiState(Dictionary<FluidApiMethod, FluidApiState> methodTransitions)
 	{
-		Methods        = methods.ToHashSet();
-		Name            = $"ICan{methods.Select(t => t.Name).Aggregate((a, b) => $"{a}Or{b}")}";
-		CanTransitionTo = transitions.ToHashSet();
+		MethodTransitions = methodTransitions;
 	}
 
 }
