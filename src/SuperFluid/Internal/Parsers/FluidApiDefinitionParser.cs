@@ -6,22 +6,15 @@ namespace SuperFluid.Internal.Parsers;
 
 internal class FluidApiDefinitionParser
 {
-	private readonly FluidApiDefinition _definition;
-
-	public FluidApiDefinitionParser(FluidApiDefinition definition)
+	public FluidApiModel Parse(FluidApiDefinition definition)
 	{
-		_definition = definition;
-	}
-
-	public FluidApiModel Parse()
-	{
-		List<FluidApiMethod> methods = GetMethods(out FluidApiMethod initialMethod);
+		List<FluidApiMethod> methods = GetMethods(definition, out FluidApiMethod initialMethod);
 		List<FluidApiState>  states  = GetMinimalStates(methods, initialMethod, out FluidApiState initialState);
 
 		FluidApiModel model = new()
 							  {
-								  Name                         = _definition.Name,
-								  Namespace                    = _definition.Namespace,
+								  Name                         = definition.Name,
+								  Namespace                    = definition.Namespace,
 								  InitialMethod                = initialMethod,
 								  Methods                      = methods,
 								  InitializerMethodReturnState = initialState,
@@ -31,16 +24,16 @@ internal class FluidApiDefinitionParser
 		return model;
 	}
 
-	private List<FluidApiMethod> GetMethods(out FluidApiMethod initialMethod)
+	private List<FluidApiMethod> GetMethods(FluidApiDefinition definition, out FluidApiMethod initialMethod)
 	{
 		Dictionary<FluidApiMethodDefinition, FluidApiMethod> methodDict = new();
 
-		foreach (FluidApiMethodDefinition method in _definition.Methods.Append(_definition.InitialState))
+		foreach (FluidApiMethodDefinition method in definition.Methods.Append(definition.InitialState))
 		{
-			FindOrCreateMethod(method, methodDict);
+			FindOrCreateMethod(definition, method, methodDict);
 		}
 
-		initialMethod = FindOrCreateMethod(_definition.InitialState, methodDict);
+		initialMethod = FindOrCreateMethod(definition, definition.InitialState, methodDict);
 
 		return methodDict.Values.ToList();
 	}
@@ -83,7 +76,7 @@ internal class FluidApiDefinitionParser
 	}
 
 
-	private FluidApiMethod FindOrCreateMethod(FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
+	private FluidApiMethod FindOrCreateMethod(FluidApiDefinition definition, FluidApiMethodDefinition method, Dictionary<FluidApiMethodDefinition, FluidApiMethod> stateDict)
 	{
 		if (stateDict.TryGetValue(method, out FluidApiMethod? state))
 		{
@@ -92,8 +85,8 @@ internal class FluidApiDefinitionParser
 		FluidApiMethod newMethod = new(method.Name, ArraySegment<FluidApiMethod>.Empty);
 		stateDict.Add(method, newMethod);
 
-		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => _definition.Methods.Single(d => d.Name == m)).ToList();
-		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(td, stateDict)).ToList();
+		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => definition.Methods.Single(d => d.Name == m)).ToList();
+		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(definition, td, stateDict)).ToList();
 
 		transitionMethods.ForEach(t => newMethod.CanTransitionTo.Add(t));
 

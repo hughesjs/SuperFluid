@@ -9,7 +9,6 @@ internal class FluidGeneratorService
 {
 	private readonly IDeserializer            _yamlDeserializer;
 
-
 	public FluidGeneratorService(IDeserializer yamlDeserializer)
 	{
 		_yamlDeserializer = yamlDeserializer;
@@ -19,8 +18,8 @@ internal class FluidGeneratorService
 	{
 		FluidApiDefinition definition = _yamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
 
-		FluidApiDefinitionParser parser = new(definition);
-		FluidApiModel            model  = parser.Parse();
+		FluidApiDefinitionParser parser = new();
+		FluidApiModel            model  = parser.Parse(definition);
 		
 		Dictionary<string, string> newSourceFiles = model.States.ToDictionary(s => $"{s.Name}.fluid.g.cs", s => GenerateStateSource(s, model));
 		

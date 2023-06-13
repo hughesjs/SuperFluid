@@ -101,9 +101,8 @@ public class FluidApiDefinitionParserTests
 													  }
 										};
 
-		FluidApiDefinitionParser parser = new(definition);
-
-		FluidApiModel model = parser.Parse();
+		FluidApiDefinitionParser parser = new();
+		FluidApiModel            model  = parser.Parse(definition);
 
 		FluidApiMethod deadMethod = model.Methods.Single(s => s.Name == "DropDead");
 		deadMethod.Name.ShouldBe("DropDead");
@@ -135,9 +134,8 @@ public class FluidApiDefinitionParserTests
 													  }
 										};
 
-		FluidApiDefinitionParser parser = new(definition);
-
-		FluidApiModel model = parser.Parse();
+		FluidApiDefinitionParser parser = new();
+		FluidApiModel            model  = parser.Parse(definition);
 
 		FluidApiMethod lockMethod   = model.Methods.Single(s => s.Name == _lock.Name);
 		FluidApiMethod unlockMethod = model.Methods.Single(s => s.Name == _unlock.Name);

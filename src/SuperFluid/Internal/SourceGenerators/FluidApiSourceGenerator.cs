@@ -19,7 +19,6 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-
 		SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
 		IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
