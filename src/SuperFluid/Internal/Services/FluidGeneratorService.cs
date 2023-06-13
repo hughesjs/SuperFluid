@@ -29,16 +29,21 @@ internal class FluidGeneratorService
 
 	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model)
 	{
+		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select(kvp
+																							=> $"""
+																									public {kvp.Value.Name} {kvp.Key.Name}();
+																								""");
+		
 		string source = $$"""
 						namespace {{model.Namespace}};
 						
 						public interface {{fluidApiState.Name}}
 						{
-							{{""/*string.Join(Environment.NewLine, methodDeclarations)*/}}
+						{{string.Join('\n', methodDeclarations)}}
 						}
 						""";
-		
-		throw new NotImplementedException();
+
+		return source;
 	}
 
 
