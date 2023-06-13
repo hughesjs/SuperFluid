@@ -87,6 +87,13 @@ public class FluidApiDefinitionParserTests
 															  CanTransitionTo = new()
 														  };
 
+	private readonly FluidApiMethodDefinition _build = new()
+													   {
+														   Name            = "Build",
+														   ReturnType      = "string",
+														   CanTransitionTo = new()
+													   };
+
 	[Fact]
 	public void CanDeserializeSimpleCase()
 	{

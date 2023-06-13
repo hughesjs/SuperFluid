@@ -23,7 +23,11 @@ Methods:
   - Name: "Start"
     CanTransitionTo:
       - "Stop"
+      - "Build"
   - Name: "Stop"
     CanTransitionTo:
       - "Start"
       - "Exit"
+  - Name: "Build"
+    CanTransitionTo: []
+    ReturnType: "string"

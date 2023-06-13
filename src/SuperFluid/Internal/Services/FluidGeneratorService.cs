@@ -31,7 +31,7 @@ internal class FluidGeneratorService
 	{
 		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select(kvp
 																							=> $"""
-																									public {kvp.Value.Name} {kvp.Key.Name}();
+																									public {kvp.Key.ReturnType ?? kvp.Value.Name} {kvp.Key.Name}();
 																								""");
 
 		string source = $$"""

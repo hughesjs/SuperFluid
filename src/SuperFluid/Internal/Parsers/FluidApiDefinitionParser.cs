@@ -28,7 +28,8 @@ internal class FluidApiDefinitionParser
 	{
 		Dictionary<FluidApiMethodDefinition, FluidApiMethod> methodDict = new();
 
-		foreach (FluidApiMethodDefinition method in definition.Methods.Append(definition.InitialState))
+		IEnumerable<FluidApiMethodDefinition> allMethods = definition.Methods.Append(definition.InitialState);
+		foreach (FluidApiMethodDefinition method in allMethods)
 		{
 			FindOrCreateMethod(definition, method, methodDict);
 		}
@@ -40,9 +41,10 @@ internal class FluidApiDefinitionParser
 
 	private List<FluidApiState> GetMinimalStates(List<FluidApiMethod> methods, FluidApiMethod initialMethod, out FluidApiState initializerReturnState)
 	{
-		List<HashSet<FluidApiMethod>> transitionSets = methods.Select(m => m.CanTransitionTo)
-															  .Distinct(new HashSetSetEqualityComparer<FluidApiMethod>())
-															  .ToList();
+		List<HashSet<FluidApiMethod>> transitionSets = methods
+													  .Select(m => m.CanTransitionTo)
+													  .Distinct(new HashSetSetEqualityComparer<FluidApiMethod>())
+													  .ToList();
 
 		Dictionary<HashSet<FluidApiMethod>, FluidApiState> transitionSetStateDict = new(new HashSetSetEqualityComparer<FluidApiMethod>());
 		foreach (HashSet<FluidApiMethod> transitionSet in transitionSets)
@@ -52,7 +54,7 @@ internal class FluidApiDefinitionParser
 
 		initializerReturnState = FindOrCreateState(initialMethod.CanTransitionTo, transitionSetStateDict);
 
-		List<FluidApiState> states = transitionSetStateDict.Values.ToList();
+		List<FluidApiState> states = transitionSetStateDict.Values.Where(s => s.MethodTransitions.Count > 0).ToList();
 		return states;
 	}
 
@@ -82,7 +84,7 @@ internal class FluidApiDefinitionParser
 		{
 			return state;
 		}
-		FluidApiMethod newMethod = new(method.Name, ArraySegment<FluidApiMethod>.Empty);
+		FluidApiMethod newMethod = new(method.Name, method.ReturnType, ArraySegment<FluidApiMethod>.Empty);
 		stateDict.Add(method, newMethod);
 
 		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => definition.Methods.Single(d => d.Name == m)).ToList();
