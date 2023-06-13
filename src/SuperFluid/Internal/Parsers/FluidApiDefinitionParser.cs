@@ -31,6 +31,7 @@ internal class FluidApiDefinitionParser
 		FluidApiModel model = new()
 							  {
 								  Name          = _definition.Name,
+								  Namespace     = _definition.Namespace,
 								  InitialMethod = initialMethod,
 								  Methods       = methods,
 								  InitialState  = initialState,

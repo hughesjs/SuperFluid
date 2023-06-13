@@ -1,4 +1,5 @@
 Name: "ICarActor"
+Namespace: "SuperFluid.Tests.Cars"
 InitialState:
   Name: "Initialize"
   CanTransitionTo: 

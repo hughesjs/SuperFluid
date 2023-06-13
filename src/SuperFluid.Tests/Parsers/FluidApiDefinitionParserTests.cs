@@ -15,75 +15,75 @@ public class FluidApiDefinitionParserTests
 																			}
 													  };
 	private readonly FluidApiMethodDefinition _initSimple = new()
-													  {
-														  Name = "Initialize",
-														  CanTransitionTo = new()
-																			{
-																				"DropDead"
-																			}
-													  };
+															{
+																Name = "Initialize",
+																CanTransitionTo = new()
+																				  {
+																					  "DropDead"
+																				  }
+															};
 
 	private readonly FluidApiMethodDefinition _unlock = new()
 														{
 															Name = "Unlock",
 															CanTransitionTo = new()
-																			{
-																				"Enter",
-																				"Lock"
-																			}
+																			  {
+																				  "Enter",
+																				  "Lock"
+																			  }
 														};
 
 	private readonly FluidApiMethodDefinition _lock = new()
 													  {
 														  Name = "Lock",
 														  CanTransitionTo = new()
-																		  {
-																			  "Unlock"
-																		  }
+																			{
+																				"Unlock"
+																			}
 													  };
-	
+
 	private readonly FluidApiMethodDefinition _enter = new()
 													   {
 														   Name = "Enter",
 														   CanTransitionTo = new()
-																		   {
-																			   "Start",
-																			   "Exit"
-																		   }
+																			 {
+																				 "Start",
+																				 "Exit"
+																			 }
 													   };
 
 	private readonly FluidApiMethodDefinition _exit = new()
 													  {
 														  Name = "Exit",
 														  CanTransitionTo = new()
-																		  {
-																			  "Lock",
-																			  "Enter"
-																		  }
+																			{
+																				"Lock",
+																				"Enter"
+																			}
 													  };
-	
+
 	private readonly FluidApiMethodDefinition _start = new()
 													   {
 														   Name = "Start",
 														   CanTransitionTo = new()
-																		   {
-																			   "Stop"
-																		   }
+																			 {
+																				 "Stop"
+																			 }
 													   };
-	
+
 	private readonly FluidApiMethodDefinition _stop = new()
 													  {
 														  Name = "Stop",
 														  CanTransitionTo = new()
-																		  {
-																			  "Start",
-																			  "Exit"
-																		  }
+																			{
+																				"Start",
+																				"Exit"
+																			}
 													  };
 
 	private readonly FluidApiMethodDefinition _dropDead = new()
 														  {
-															  Name = "DropDead",
+															  Name            = "DropDead",
 															  CanTransitionTo = new()
 														  };
 
@@ -93,25 +93,26 @@ public class FluidApiDefinitionParserTests
 		FluidApiDefinition definition = new()
 										{
 											Name         = "Simple",
+											Namespace    = "Simple.Test",
 											InitialState = _initSimple,
-											Methods      = new()
-														   {
-															   _dropDead
-														   }
+											Methods = new()
+													  {
+														  _dropDead
+													  }
 										};
-		
+
 		FluidApiDefinitionParser parser = new(definition);
-		
-		FluidApiModel  model      = parser.Parse();
-		
+
+		FluidApiModel model = parser.Parse();
+
 		FluidApiMethod deadMethod = model.Methods.Single(s => s.Name == "DropDead");
 		deadMethod.Name.ShouldBe("DropDead");
 		deadMethod.CanTransitionTo.ShouldBeEmpty();
-		
+
 		FluidApiMethod initMethod = model.InitialMethod;
 		initMethod.Name.ShouldBe("Initialize");
 		initMethod.CanTransitionTo.ShouldContain(deadMethod);
-		
+
 		model.Methods.ShouldContain(initMethod);
 	}
 
@@ -121,6 +122,7 @@ public class FluidApiDefinitionParserTests
 		FluidApiDefinition definition = new()
 										{
 											Name         = "Simple",
+											Namespace    = "Simple.Test",
 											InitialState = _init,
 											Methods = new()
 													  {
@@ -132,9 +134,9 @@ public class FluidApiDefinitionParserTests
 														  _stop
 													  }
 										};
-		
+
 		FluidApiDefinitionParser parser = new(definition);
-		
+
 		FluidApiModel model = parser.Parse();
 
 		FluidApiMethod lockMethod   = model.Methods.Single(s => s.Name == _lock.Name);
@@ -143,18 +145,18 @@ public class FluidApiDefinitionParserTests
 		FluidApiMethod exitMethod   = model.Methods.Single(s => s.Name == _exit.Name);
 		FluidApiMethod startMethod  = model.Methods.Single(s => s.Name == _start.Name);
 		FluidApiMethod stopMethod   = model.Methods.Single(s => s.Name == _stop.Name);
-		
+
 		FluidApiMethod initMethod = model.InitialMethod;
 		initMethod.Name.ShouldBe(_init.Name);
 		model.Methods.ShouldContain(initMethod);
-		
-		initMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod>{unlockMethod});
-		lockMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod>{ unlockMethod });
-		unlockMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { enterMethod, lockMethod });
-		enterMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { startMethod, exitMethod });
-		exitMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { enterMethod, lockMethod });
-		startMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { stopMethod });
-		stopMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> { startMethod, exitMethod });
+
+		initMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {unlockMethod});
+		lockMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {unlockMethod});
+		unlockMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {enterMethod, lockMethod});
+		enterMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {startMethod, exitMethod});
+		exitMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {enterMethod, lockMethod});
+		startMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {stopMethod});
+		stopMethod.CanTransitionTo.ShouldBeEquivalentTo(new HashSet<FluidApiMethod> {startMethod, exitMethod});
 	}
 
 }
