@@ -6,7 +6,8 @@ namespace SuperFluid.Internal.Definitions;
 internal record FluidApiMethodDefinition
 {
 	public required string Name { get; init; }
-	
 	public string? ReturnType { get; init; }
-	public required List<string> CanTransitionTo { get; init; } = new();
+	public List<string> CanTransitionTo { get; init; } = new();
+	
+	public List<FluidApiArgumentDefinition> Arguments { get; init; } = new();
 }
