@@ -36,7 +36,7 @@ internal class FluidGeneratorService
 
 							public interface {{model.Name}}: {{string.Join(',', model.States.Select(s => s.Name))}}
 							{
-								public static abstract {{model.InitializerMethodReturnState.Name}} {{model.InitialMethod.Name}}();
+								public static abstract {{model.InitializerMethodReturnState.Name}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
 							}
 							""";
 		return source;
@@ -46,7 +46,7 @@ internal class FluidGeneratorService
 	{
 		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select(kvp
 																							=> $"""
-																									public {kvp.Key.ReturnType ?? kvp.Value.Name} {kvp.Key.Name}();
+																									public {kvp.Key.ReturnType ?? kvp.Value.Name} {kvp.Key.Name}({string.Join(", ", kvp.Key.Arguments.Select(a =>$"{a.Type} {a.Name}"))});
 																								""");
 
 		string source = $$"""
