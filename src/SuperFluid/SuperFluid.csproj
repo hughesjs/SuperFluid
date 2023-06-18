@@ -33,44 +33,44 @@
         <PackageReference Include="YamlDotNet" Version="13.1.1" PrivateAssets="all" GeneratePathProperty="true" />
     </ItemGroup>
     
-<!--    &lt;!&ndash; Gross hack to let source generator use nuget packages &ndash;&gt;-->
-<!--    <PropertyGroup>-->
-<!--        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>-->
-<!--    </PropertyGroup>-->
-<!--    -->
-<!--    <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">-->
-<!--            <ItemGroup>-->
-<!--                <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />-->
-<!--                <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
-<!--            </ItemGroup>-->
-<!--    </Target>-->
-<!--    &lt;!&ndash; End Hack &ndash;&gt;-->
+    <!-- Gross hack to let source generator use nuget packages -->
+    <PropertyGroup>
+        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+    </PropertyGroup>
     
-    
-<!--    <ItemGroup>-->
-<!--        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
-<!--    </ItemGroup>-->
-
-    <Target Name="AddNugetDlls" BeforeTargets="_GetPackageFiles">
-        <!-- Merge the collection of PackageReference and Assemblies using the NuGetPackageId key.
-             This produces a new list containing the DLL path and the "IncludeInPackage" metadata-->
-        <JoinItems Left="@(ResolvedCompileFileDefinitions)" LeftKey="NuGetPackageId" LeftMetadata="*" Right="@(PackageReference)" RightKey="" RightMetadata="*" ItemSpecToUse="Left">
-            <Output TaskParameter="JoinResult" ItemName="_PackagesToPack" />
-        </JoinItems>
-
-        <ItemGroup>
-            <!-- Remove NETStandard DLLs -->
-            <_PackagesToPack Remove="@(_PackagesToPack)" Condition="%(NuGetPackageId) == 'NETStandard.Library'" />
-        </ItemGroup>
-
-        <Message Importance="High" Text="Adding DLLs from the following packages: @(_PackagesToPack->'%(NuGetPackageId)')" />
-
-        <ItemGroup>
-            <!-- Update the collection of items to pack with the DLLs from the NuGet packages -->
-            <None Include="@(_PackagesToPack)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-
-            <!-- Add the DLL produced by the current project to the NuGet package -->
-            <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-        </ItemGroup>
+    <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">
+            <ItemGroup>
+                <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />
+                <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            </ItemGroup>
     </Target>
+    <!-- End Hack -->
+    
+    
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
+
+<!--    <Target Name="AddNugetDlls" BeforeTargets="_GetPackageFiles">-->
+<!--        &lt;!&ndash; Merge the collection of PackageReference and Assemblies using the NuGetPackageId key.-->
+<!--             This produces a new list containing the DLL path and the "IncludeInPackage" metadata&ndash;&gt;-->
+<!--        <JoinItems Left="@(ResolvedCompileFileDefinitions)" LeftKey="NuGetPackageId" LeftMetadata="*" Right="@(PackageReference)" RightKey="" RightMetadata="*" ItemSpecToUse="Left">-->
+<!--            <Output TaskParameter="JoinResult" ItemName="_PackagesToPack" />-->
+<!--        </JoinItems>-->
+
+<!--        <ItemGroup>-->
+<!--            &lt;!&ndash; Remove NETStandard DLLs &ndash;&gt;-->
+<!--            <_PackagesToPack Remove="@(_PackagesToPack)" Condition="%(NuGetPackageId) == 'NETStandard.Library'" />-->
+<!--        </ItemGroup>-->
+
+<!--        <Message Importance="High" Text="Adding DLLs from the following packages: @(_PackagesToPack->'%(NuGetPackageId)')" />-->
+
+<!--        <ItemGroup>-->
+<!--            &lt;!&ndash; Update the collection of items to pack with the DLLs from the NuGet packages &ndash;&gt;-->
+<!--            <None Include="@(_PackagesToPack)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+
+<!--            &lt;!&ndash; Add the DLL produced by the current project to the NuGet package &ndash;&gt;-->
+<!--            <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+<!--        </ItemGroup>-->
+<!--    </Target>-->
 </Project>

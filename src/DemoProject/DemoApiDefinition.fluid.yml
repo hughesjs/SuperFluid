@@ -1,0 +1,41 @@
+Name: "ICarActor"
+Namespace: "SuperFluid.Tests.Cars"
+InitialState:
+  Name: "Initialize"
+  CanTransitionTo:
+    - "Unlock"
+Methods:
+  - Name: "Unlock"
+    CanTransitionTo:
+      - "Lock"
+      - "Enter"
+  - Name: "Lock"
+    CanTransitionTo:
+      - "Unlock"
+  - Name: "Enter"
+    CanTransitionTo:
+      - "Start"
+      - "Exit"
+  - Name: "Exit"
+    CanTransitionTo:
+      - "Lock"
+      - "Enter"
+  - Name: "Start"
+    Arguments:
+      - Name: "speed"
+        Type: "int"
+      - Name: "direction"
+        Type: "string"
+    CanTransitionTo:
+      - "Stop"
+      - "Build"
+  - Name: "Stop"
+    CanTransitionTo:
+      - "Start"
+      - "Exit"
+  - Name: "Build"
+    Arguments:
+      - Name: "color"
+        Type: "string"
+    CanTransitionTo: []
+    ReturnType: "string"
