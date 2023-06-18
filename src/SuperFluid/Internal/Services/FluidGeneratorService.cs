@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.Model;
 using SuperFluid.Internal.Parsers;
@@ -34,7 +36,7 @@ internal class FluidGeneratorService
 		string source = $$"""
 							namespace {{model.Namespace}};
 
-							public interface {{model.Name}}: {{string.Join(',', model.States.Select(s => s.Name))}}
+							public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => s.Name))}}
 							{
 								public static abstract {{model.InitializerMethodReturnState.Name}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
 							}
@@ -54,7 +56,7 @@ internal class FluidGeneratorService
 						
 						public interface {{fluidApiState.Name}}
 						{
-						{{string.Join('\n', methodDeclarations)}}
+						{{string.Join("\n", methodDeclarations)}}
 						}
 						""";
 

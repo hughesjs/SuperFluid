@@ -1,0 +1,14 @@
+Name: "IPgfPlotBuilder"
+Namespace: "PgfPlotsSdk.Public.Builders"
+InitialState:
+  Name: "CreateBuilder"
+  CanTransitionTo:
+    #    - "AddPgfPlotWithAxes"
+    #    - "AddPgfPlot"
+    - "AddFigure"
+Methods:
+  - Name: "AddFigure"
+    ReturnType: "FigureBuilder"
+    Arguments:
+      - Name: "figureOptions"
+        Type: "FigureOptions?"

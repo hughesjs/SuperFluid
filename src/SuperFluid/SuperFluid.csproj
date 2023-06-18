@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>default</LangVersion>
@@ -17,6 +17,7 @@
         <PackageReadmeFile>./README.md</PackageReadmeFile>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <developmentDependency>true</developmentDependency>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,25 +30,47 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
-        <PackageReference Include="YamlDotNet" Version="13.1.0" PrivateAssets="all" GeneratePathProperty="true" />
+        <PackageReference Include="YamlDotNet" Version="13.1.1" PrivateAssets="all" GeneratePathProperty="true" />
     </ItemGroup>
     
-    <!-- Gross hack to let source generator use nuget packages -->
-    <PropertyGroup>
-        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
-    </PropertyGroup>
+<!--    &lt;!&ndash; Gross hack to let source generator use nuget packages &ndash;&gt;-->
+<!--    <PropertyGroup>-->
+<!--        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>-->
+<!--    </PropertyGroup>-->
+<!--    -->
+<!--    <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">-->
+<!--            <ItemGroup>-->
+<!--                <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />-->
+<!--                <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+<!--            </ItemGroup>-->
+<!--    </Target>-->
+<!--    &lt;!&ndash; End Hack &ndash;&gt;-->
     
-    <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">
-            <ItemGroup>
-                <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />
-                <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-            </ItemGroup>
+    
+<!--    <ItemGroup>-->
+<!--        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+<!--    </ItemGroup>-->
+
+    <Target Name="AddNugetDlls" BeforeTargets="_GetPackageFiles">
+        <!-- Merge the collection of PackageReference and Assemblies using the NuGetPackageId key.
+             This produces a new list containing the DLL path and the "IncludeInPackage" metadata-->
+        <JoinItems Left="@(ResolvedCompileFileDefinitions)" LeftKey="NuGetPackageId" LeftMetadata="*" Right="@(PackageReference)" RightKey="" RightMetadata="*" ItemSpecToUse="Left">
+            <Output TaskParameter="JoinResult" ItemName="_PackagesToPack" />
+        </JoinItems>
+
+        <ItemGroup>
+            <!-- Remove NETStandard DLLs -->
+            <_PackagesToPack Remove="@(_PackagesToPack)" Condition="%(NuGetPackageId) == 'NETStandard.Library'" />
+        </ItemGroup>
+
+        <Message Importance="High" Text="Adding DLLs from the following packages: @(_PackagesToPack->'%(NuGetPackageId)')" />
+
+        <ItemGroup>
+            <!-- Update the collection of items to pack with the DLLs from the NuGet packages -->
+            <None Include="@(_PackagesToPack)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+            <!-- Add the DLL produced by the current project to the NuGet package -->
+            <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        </ItemGroup>
     </Target>
-    <!-- End Hack -->
-    
-    
-    <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    </ItemGroup>
 </Project>

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using SuperFluid.Internal.Backports;
 
 namespace SuperFluid.Internal.Model;
 
@@ -11,13 +13,14 @@ internal record FluidApiMethod
 		ReturnType      = returnType;
 		Arguments       = args.ToHashSet();
 		CanTransitionTo = transitions.ToHashSet();
+		
 	}
 
-	internal string Name { get; init; }
+	internal string Name { get; set; }
 
-	internal string?                 ReturnType      { get; init; }
-	internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = new();
+	internal string?                 ReturnType      { get; set; }
+	internal HashSet<FluidApiMethod> CanTransitionTo { get; set; } = new();
 
-	internal HashSet<FluidApiArgument> Arguments { get; init; } = new();
+	internal HashSet<FluidApiArgument> Arguments { get; set; } = new();
 }
 

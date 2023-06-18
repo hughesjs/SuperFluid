@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace SuperFluid.Internal.Definitions;
@@ -5,9 +6,9 @@ namespace SuperFluid.Internal.Definitions;
 [DebuggerDisplay("{Name}")]
 internal record FluidApiMethodDefinition
 {
-	public required string Name { get; init; }
-	public string? ReturnType { get; init; }
-	public List<string> CanTransitionTo { get; init; } = new();
+	public string       Name            { get; set; }
+	public string?      ReturnType      { get; set; }
+	public List<string> CanTransitionTo { get; set; } = new();
 	
-	public List<FluidApiArgumentDefinition> Arguments { get; init; } = new();
+	public List<FluidApiArgumentDefinition> Arguments { get; set; } = new();
 }

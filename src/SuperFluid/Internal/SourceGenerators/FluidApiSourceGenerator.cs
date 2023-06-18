@@ -1,4 +1,5 @@
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.IO;
 using Microsoft.CodeAnalysis;
 using SuperFluid.Internal.Services;
 using YamlDotNet.Serialization;
@@ -29,9 +30,9 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 		context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
 													   {
 														   Dictionary<string, string> generatedSource = _generatorService.Generate(nameAndContent.Content);
-														   foreach ((string fileName, string source) in generatedSource)
+														   foreach (KeyValuePair<string, string> kvp in generatedSource)
 														   {
-															   spc.AddSource(fileName, source);
+															   spc.AddSource(kvp.Key, kvp.Value);
 														   }
 													   });
 	}

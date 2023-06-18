@@ -7,6 +7,7 @@ namespace SuperFluid.Tests.SourceGenerators;
 public class FluidGeneratorServiceTests
 {
 	private readonly string _rawYml = File.ReadAllText("../../../DemoApiDefinition.fluid.yml");
+	private readonly string _agh = File.ReadAllText("../../../agh.fluid.yml");
 	
 	[Fact]
 	public void CanGenerateDemoApi()
@@ -19,6 +20,14 @@ public class FluidGeneratorServiceTests
 		result["ICanStartOrExit.fluid.g.cs"].ShouldBe(CanStartOrExitSource);
 		result["ICanStopOrBuild.fluid.g.cs"].ShouldBe(CanStopOrBuildSource);
 		result["ICarActor.fluid.g.cs"].ShouldBe(CarActorSource);
+	}
+	
+	[Fact]
+	public void Agh()
+	{
+		IDeserializer              deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
+		FluidGeneratorService      service      = new(deserializer, new());
+		Dictionary<string, string> result       = service.Generate(_agh);
 	}
 
 	private const string CanLockOrEnterSource = """

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.EqualityComparers;
 using SuperFluid.Internal.Model;
@@ -87,7 +89,7 @@ internal class FluidApiDefinitionParser
 		
 		List<FluidApiArgument> args = method.Arguments.Select(a => new FluidApiArgument(a.Name, a.Type)).ToList();
 		
-		FluidApiMethod newMethod = new(method.Name, method.ReturnType, ArraySegment<FluidApiMethod>.Empty, args);
+		FluidApiMethod newMethod = new(method.Name, method.ReturnType, new List<FluidApiMethod>(), args);
 		stateDict.Add(method, newMethod);
 
 		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => definition.Methods.Single(d => d.Name == m)).ToList();

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace SuperFluid.Internal.Model;
 
@@ -6,7 +8,7 @@ namespace SuperFluid.Internal.Model;
 internal record FluidApiState
 {
 	internal string                                    Name              => MethodTransitions.Count == 0 ? "Terminating State" : $"ICan{MethodTransitions.Keys.Select(t => t.Name).Aggregate((a, b) => $"{a}Or{b}")}";
-	internal Dictionary<FluidApiMethod, FluidApiState> MethodTransitions { get; init; } = new();
+	internal Dictionary<FluidApiMethod, FluidApiState> MethodTransitions { get; set; } = new();
 
 	public FluidApiState(Dictionary<FluidApiMethod, FluidApiState> methodTransitions)
 	{

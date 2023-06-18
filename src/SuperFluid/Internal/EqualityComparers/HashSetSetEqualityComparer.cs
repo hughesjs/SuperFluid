@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace SuperFluid.Internal.EqualityComparers;
 
 public class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> where T: notnull

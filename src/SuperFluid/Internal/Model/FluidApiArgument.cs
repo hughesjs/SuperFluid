@@ -11,6 +11,6 @@ internal class FluidApiArgument
 		Type = argType;
 	}
 
-	public string Type { get; init; }
-	public string Name { get; init; }
+	public string Type { get; set; }
+	public string Name { get; set; }
 }
