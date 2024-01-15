@@ -12,9 +12,9 @@ jobs:
     name: Test Project
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Run tests
@@ -26,9 +26,9 @@ jobs:
     name: Create a Package Release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3 # Need the full commit history for conventional commit
+    - uses: actions/checkout@v4 # Need the full commit history for conventional commit
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Bump version and push tag
@@ -45,7 +45,7 @@ jobs:
     - name: Create Nuget Package
       run: dotnet build -c Release ./src/SuperFluid/SuperFluid.csproj && dotnet pack -c Release -p:PackageVersion=${{ steps.tag_version.outputs.new_version }} -o . ./src/SuperFluid/SuperFluid.csproj
     - name: Upload Package for Publishing
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: PackedLib
         path: ./*.nupkg
@@ -58,11 +58,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download built project  
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: PackedLib
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Push Package to GitHub
@@ -75,11 +75,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download built project  
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: PackedLib
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Push Package to Nuget
