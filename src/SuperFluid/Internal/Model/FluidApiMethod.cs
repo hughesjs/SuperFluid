@@ -9,8 +9,8 @@ internal record FluidApiMethod
 	{
 		Name            = name;
 		ReturnType      = returnType;
-		Arguments       = args.ToHashSet();
-		CanTransitionTo = transitions.ToHashSet();
+		Arguments       = [..args];
+		CanTransitionTo = [..transitions];
 	}
 
 	internal string Name { get; init; }
