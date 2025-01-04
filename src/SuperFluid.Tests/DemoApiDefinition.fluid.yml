@@ -26,6 +26,9 @@ Methods:
         Type: "int"
       - Name: "direction"
         Type: "string"
+    GenericArguments:
+      # Pointless generic arg for testing
+      - "T"
     CanTransitionTo:
       - "Stop"
       - "Build"

@@ -21,15 +21,16 @@ public class FluidGeneratorServiceTests
 		result["ICarActor.fluid.g.cs"].ShouldBe(CarActorSource);
 	}
 
-	private const string CanLockOrEnterSource = """
-										namespace SuperFluid.Tests.Cars;
 
-										public interface ICanLockOrEnter
-										{
-											public ICanUnlock Lock();
-											public ICanStartOrExit Enter();
-										}
-										""";
+	private const string CanLockOrEnterSource = """
+	                                            namespace SuperFluid.Tests.Cars;
+
+	                                            public interface ICanLockOrEnter
+	                                            {
+	                                            	public ICanUnlock Lock();
+	                                            	public ICanStartOrExit Enter();
+	                                            }
+	                                            """;
 
 	private const string CanUnlockSource = """
 										namespace SuperFluid.Tests.Cars;
@@ -45,7 +46,7 @@ public class FluidGeneratorServiceTests
 
 										public interface ICanStartOrExit
 										{
-											public ICanStopOrBuild Start(int speed, string direction);
+											public ICanStopOrBuild Start<T>(int speed, string direction);
 											public ICanLockOrEnter Exit();
 										}
 										""";
