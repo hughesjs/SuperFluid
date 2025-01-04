@@ -85,7 +85,7 @@ internal class FluidApiDefinitionParser
 			return state;
 		}
 		
-		List<FluidApiArgument> args = method.Arguments.Select(a => new FluidApiArgument(a.Name, a.Type)).ToList();
+		List<FluidApiArgument> args = method.Arguments.Select(a => new FluidApiArgument(a.Name, a.Type, a.DefaultValue)).ToList();
 		
 		List<FluidGenericArgument> genericArgs = method.GenericArguments.Select(a => new FluidGenericArgument(a.Name, a.Constraints)).ToList();
 		

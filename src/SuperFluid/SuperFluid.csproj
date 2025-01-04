@@ -11,7 +11,8 @@
         <Authors>James Hughes</Authors>
         <Description>An incremental source generator for fluent APIs with grammar</Description>
         <PackageProjectUrl>https://github.com/hughesjs/SuperFluid</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/hughesjs/SuperFluid/blob/master/LICENSE</PackageLicenseUrl>
+        <PackageLicense>MIT</PackageLicense>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/hughesjs/SuperFluid.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReadmeFile>./README.md</PackageReadmeFile>
