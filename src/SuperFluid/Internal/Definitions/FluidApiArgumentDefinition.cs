@@ -7,4 +7,6 @@ internal record FluidApiArgumentDefinition
 {
 	public required string Type { get; init; }
 	public required string Name { get; init; }
+	
+	public string? DefaultValue { get; init; }
 }
