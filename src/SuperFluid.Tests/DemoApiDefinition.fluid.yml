@@ -26,9 +26,16 @@ Methods:
         Type: "int"
       - Name: "direction"
         Type: "string"
+    # These constraints are pointless but are here to test the parser
     GenericArguments:
-      # Pointless generic arg for testing
-      - "T"
+      - Name: "T"
+        Constraints:
+          - "class"
+          - "INumber"
+      - Name: "X"
+        Constraints:
+          - "notnull"
+      
     CanTransitionTo:
       - "Stop"
       - "Build"
