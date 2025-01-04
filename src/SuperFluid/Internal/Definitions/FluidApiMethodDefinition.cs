@@ -10,4 +10,6 @@ internal record FluidApiMethodDefinition
 	public List<string> CanTransitionTo { get; init; } = new();
 	
 	public List<FluidApiArgumentDefinition> Arguments { get; init; } = new();
+	
+	public List<string> GenericArguments { get; init; } = new();
 }

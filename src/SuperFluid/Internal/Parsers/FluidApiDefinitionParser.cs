@@ -87,7 +87,7 @@ internal class FluidApiDefinitionParser
 		
 		List<FluidApiArgument> args = method.Arguments.Select(a => new FluidApiArgument(a.Name, a.Type)).ToList();
 		
-		FluidApiMethod newMethod = new(method.Name, method.ReturnType, Array.Empty<FluidApiMethod>(), args);
+		FluidApiMethod newMethod = new(method.Name, method.ReturnType, Array.Empty<FluidApiMethod>(), args, method.GenericArguments);
 		stateDict.Add(method, newMethod);
 
 		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => definition.Methods.Single(d => d.Name == m)).ToList();
