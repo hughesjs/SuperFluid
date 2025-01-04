@@ -31,4 +31,8 @@
     <ItemGroup>
         <ProjectReference Include="../SuperFluid/SuperFluid.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="DemoApiDefinition.fluid.yml" />
+    </ItemGroup>
 </Project>
