@@ -44,18 +44,7 @@ internal class FluidGeneratorService
 
 	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model) 
 	{
-		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select(kvp
-																							=>
-		{
-			string genericArgs = kvp.Key.GenericArguments.Count > 0 ? $"<{string.Join(",", kvp.Key.GenericArguments.Select(a => $"{a.Name}"))}>" : string.Empty;
-			
-			string constraints = kvp.Key.GenericArguments.Count > 0 ? $" {string.Join(" ", kvp.Key.GenericArguments.Select(a => $"where {a.Name} : {string.Join(", ", a.Constraints)}"))}" : string.Empty;
-			
-			
-			return $"""
-			        	public {kvp.Key.ReturnType ?? kvp.Value.Name} {kvp.Key.Name}{genericArgs}({string.Join(", ", kvp.Key.Arguments.Select(a => $"{a.Type} {a.Name}"))}){constraints};
-			        """;
-		});
+		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select((kvp) => GenerateMethodSource(kvp.Key, kvp.Value));
 
 		string source = $$"""
 						namespace {{model.Namespace}};
@@ -69,5 +58,24 @@ internal class FluidGeneratorService
 		return source;
 	}
 
+	private string GenerateMethodSource(FluidApiMethod method, FluidApiState state)
+	{
+		string genericArgs = method.GenericArguments.Count > 0 ? $"<{string.Join(",", method.GenericArguments.Select(a => $"{a.Name}"))}>" : string.Empty;
 
+		string constraints = method.GenericArguments.Count > 0 ? $" {string.Join(" ", method.GenericArguments.Select(GenerateGenericConstraintSource))}" : string.Empty;
+
+		return $"""
+		        	public {method.ReturnType ?? state.Name} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};
+		        """;
+	}
+
+	private string GenerateMethodArgsSource(FluidApiArgument a)
+	{
+		return $"{a.Type} {a.Name}{(a.DefaultValue is not null ? " = " + a.DefaultValue : string.Empty)}";
+	}
+
+	private string GenerateGenericConstraintSource(FluidGenericArgument a)
+	{
+		return $"where {a.Name} : {string.Join(", ", a.Constraints)}";
+	}
 }
