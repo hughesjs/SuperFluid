@@ -11,5 +11,5 @@ internal record FluidApiMethodDefinition
 	
 	public List<FluidApiArgumentDefinition> Arguments { get; init; } = new();
 	
-	public List<string> GenericArguments { get; init; } = new();
+	public List<FluidGenericArgumentDefinition> GenericArguments { get; init; } = new();
 }

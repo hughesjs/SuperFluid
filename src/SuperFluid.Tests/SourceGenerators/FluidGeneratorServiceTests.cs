@@ -46,7 +46,7 @@ public class FluidGeneratorServiceTests
 
 										public interface ICanStartOrExit
 										{
-											public ICanStopOrBuild Start<T>(int speed, string direction);
+											public ICanStopOrBuild Start<T,X>(int speed, string direction) where T : class, INumber where X : notnull;
 											public ICanLockOrEnter Exit();
 										}
 										""";

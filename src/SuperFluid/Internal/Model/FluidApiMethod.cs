@@ -5,7 +5,7 @@ namespace SuperFluid.Internal.Model;
 [DebuggerDisplay("{Name}")]
 internal record FluidApiMethod
 {
-	public FluidApiMethod(string name, string? returnType, IEnumerable<FluidApiMethod> transitions, IEnumerable<FluidApiArgument> args, IEnumerable<string> genericArgs)
+	public FluidApiMethod(string name, string? returnType, IEnumerable<FluidApiMethod> transitions, IEnumerable<FluidApiArgument> args, IEnumerable<FluidGenericArgument> genericArgs)
 	{
 		Name            = name;
 		ReturnType      = returnType;
@@ -21,6 +21,6 @@ internal record FluidApiMethod
 
 	internal HashSet<FluidApiArgument> Arguments { get; init; } = new();
 	
-	internal HashSet<string> GenericArguments { get; init; } = new();
+	internal HashSet<FluidGenericArgument> GenericArguments { get; init; } = new();
 }
 

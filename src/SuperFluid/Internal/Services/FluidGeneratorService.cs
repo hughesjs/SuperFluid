@@ -42,14 +42,18 @@ internal class FluidGeneratorService
 		return source;
 	}
 
-	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model)
+	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model) 
 	{
 		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select(kvp
 																							=>
 		{
-			string genericArgs = kvp.Key.GenericArguments.Count > 0 ? $"<{string.Join(", ", kvp.Key.GenericArguments.Select(a => $"{a}"))}>" : string.Empty;
+			string genericArgs = kvp.Key.GenericArguments.Count > 0 ? $"<{string.Join(",", kvp.Key.GenericArguments.Select(a => $"{a.Name}"))}>" : string.Empty;
+			
+			string constraints = kvp.Key.GenericArguments.Count > 0 ? $" {string.Join(" ", kvp.Key.GenericArguments.Select(a => $"where {a.Name} : {string.Join(", ", a.Constraints)}"))}" : string.Empty;
+			
+			
 			return $"""
-			        	public {kvp.Key.ReturnType ?? kvp.Value.Name} {kvp.Key.Name}{genericArgs}({string.Join(", ", kvp.Key.Arguments.Select(a => $"{a.Type} {a.Name}"))});
+			        	public {kvp.Key.ReturnType ?? kvp.Value.Name} {kvp.Key.Name}{genericArgs}({string.Join(", ", kvp.Key.Arguments.Select(a => $"{a.Type} {a.Name}"))}){constraints};
 			        """;
 		});
 
