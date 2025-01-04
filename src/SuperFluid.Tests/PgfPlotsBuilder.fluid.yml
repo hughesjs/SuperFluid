@@ -1,0 +1,253 @@
+Name: "IPgfPlotBuilder"
+Namespace: "PgfPlotsSdk.Public.Generated"
+InitialState:
+  Name: "CreateBuilder"
+  CanTransitionTo:
+    - "AddPgfPlotWithAxes"
+    - "AddPgfPlot"
+    - "AddFigure"
+Methods: 
+  - Name: "AddFigure"
+    ReturnType: "FigureBuilder"
+    Arguments:
+      - Name: "figureOptions"
+        Type: "FigureOptions?"
+    CanTransitionTo:
+      - "AddPgfPlotWithAxes"
+      - "AddPgfPlot"
+      - "SetCaption"
+      - "SetLabel"
+      - "SetPlacementFlag"    
+  - Name: "AddPgfPlotWithAxes"
+    Arguments:
+      - Name: "axisType"
+        Type: "AxisType"
+      - Name: "options"
+        Type: "AxisOptions?"
+    CanTransitionTo: &AxisSettingsCircular
+      - "AddPlot"
+      - "SetXLabel"
+      - "SetYLabel"
+      - "SetXMin"
+      - "SetYMin"
+      - "SetXMax"
+      - "SetYMax"
+      - "SetMinorXTickNumber"
+      - "SetMinorYTickNumber"
+      - "SetXTicks"
+      - "SetYTicks"
+      - "SetGrid"
+  - Name: "SetXLabel"
+    Arguments:
+      - Name: "label"
+        Type: "string?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetYLabel"
+    Arguments:
+      - Name: "label"
+        Type: "string?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetXMin"
+    Arguments:
+      - Name: "min"
+        Type: "float?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetYMin"
+    Arguments:
+      - Name: "min"
+        Type: "float?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetXMax"
+    Arguments:
+      - Name: "max"
+        Type: "float?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetYMax"
+    Arguments:
+      - Name: "max"
+        Type: "float?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetMinorXTickNumber"
+    Arguments:
+      - Name: "number"
+        Type: "int?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetMinorYTickNumber"
+    Arguments:
+      - Name: "number"
+        Type: "int?"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetXTicks"
+    Arguments:
+      - Name: "ticks"
+        Type: "params float[]"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "SetYTicks"
+    Arguments:
+      - Name: "ticks"
+        Type: "params float[]"
+    CanTransitionTo: *AxisSettingsCircular
+  - Name: "AddPgfPlot"
+    CanTransitionTo:
+      - "AddPie"
+  - Name: "AddPie"
+    Arguments:
+      - Name: "slices"
+        Type: "IEnumerable<PieChartSliceData<T>>"
+      - Name: "options"
+        Type: "PieChartOptions?"
+    CanTransitionTo: &PieSettingsCircular
+      - "AddPie"
+      - "Build"
+      - "SetRadius"
+      - "SetHideNumber"
+      - "SetReferenceSum"
+      - "SetRotation"
+      - "SetCentrePosition"
+      - "SetScaleFont"
+      - "SetSliceColours"
+      - "SetTextPosition"
+      - "SetAfterNumberText"
+      - "SetBeforeNumberText"
+      - "SetPieChartType"
+      - "SetSliceExplosionFactors"
+  - Name: "SetRadius"
+    Arguments:
+      - Name: "radius"
+        Type: "float?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetHideNumber"
+    Arguments:
+      - Name: "enabled"
+        Type: "bool?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetReferenceSum"
+    Arguments:
+      - Name: "referenceSum"
+        Type: "float?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetRotation"
+    Arguments:
+      - Name: "rotation"
+        Type: "float?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetCentrePosition"
+    Arguments:
+          - Name: "x"
+            Type: "float"
+          - Name: "y"
+            Type: "float"
+    CanTransitionTo: *PieSettingsCircular        
+  - Name: "SetScaleFont"
+    Arguments:
+      - Name: "enabled"
+        Type: "bool?"
+  - Name: "SetSliceColours"
+    Arguments:
+      - Name: "colours"
+        Type: "params LatexColour[]"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetTextPosition"
+    Arguments:
+      - Name: "textPosition"
+        Type: "PieTextOption?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetAfterNumberText"
+    Arguments:
+      - Name: "afterText"
+        Type: "string?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetBeforeNumberText"
+    Arguments:
+      - Name: "beforeText"
+        Type: "string?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetPieChartType"
+    Arguments:
+      - Name: "type"
+        Type: "PieType?"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "SetSliceExplosionFactors"
+    Arguments:
+      - Name: "factors"
+        Type: "params float[]"
+    CanTransitionTo: *PieSettingsCircular
+  - Name: "AddPlot"
+    Arguments:
+      - Name: "data"
+        Type: "IEnumerable<LatexData>"
+      - Name: "options"
+        Type: "PlotOptions?"
+    CanTransitionTo: &PlotOptionsCircular
+      - "AddPlot"
+      - "Build"
+      - "SetColour"
+      - "SetBarType"
+      - "SetMark"
+      - "SetSmooth"
+      - "SetBarWidth"
+      - "SetFillColour"
+      - "SetFillOpacity"
+      - "SetLineStyle"
+      - "SetLineWidth"
+      - "SetMarkSize"
+      - "SetOnlyMarks"
+  - Name: "SetColour"
+    Arguments:
+      - Name: "colour"
+        Type: "LatexColour?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetBarType"
+    Arguments:
+      - Name: "type"
+        Type: "BarType?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetMark"
+    Arguments:
+      - Name: "mark"
+        Type: "PlotMark?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetSmooth"
+    Arguments:
+      - Name: "enabled"
+        Type: "bool?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetBarWidth"
+    Arguments:
+      - Name: "width"
+        Type: "float?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetFillColour"
+    Arguments:
+      - Name: "colour"
+        Type: "LatexColour?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetFillOpacity"
+    Arguments:
+      - Name: "opacity"
+        Type: "float?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetLineStyle"
+    Arguments:
+      - Name: "style"
+        Type: "LineStyle?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetLineWidth"
+    Arguments:
+      - Name: "width"
+        Type: "float?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetMarkSize"
+    Arguments:
+      - Name: "size"
+        Type: "float?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "SetOnlyMarks"
+    Arguments:
+      - Name: "enabled"
+        Type: "bool?"
+    CanTransitionTo: *PlotOptionsCircular
+  - Name: "Build"
+    Arguments: []
+    CanTransitionTo: []
+    ReturnType: "string"
