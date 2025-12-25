@@ -110,7 +110,8 @@ internal class FluidApiDefinitionParser
 
 	private FluidApiMethodDefinition FindMethodByName(FluidApiDefinition definition, string methodName)
 	{
-		FluidApiMethodDefinition[] matches = definition.Methods
+		IEnumerable<FluidApiMethodDefinition> allMethods = definition.Methods.Append(definition.InitialState);
+		FluidApiMethodDefinition[] matches = allMethods
 			.Where(d => d.Name == methodName)
 			.ToArray();
 
