@@ -1,3 +1,4 @@
+using System;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.EqualityComparers;
 using SuperFluid.Internal.Model;
@@ -8,6 +9,13 @@ internal class FluidApiDefinitionParser
 {
 	public FluidApiModel Parse(FluidApiDefinition definition)
 	{
+		if (definition is null)
+			throw new ArgumentNullException(nameof(definition));
+		if (definition.Methods is null)
+			throw new ArgumentNullException(nameof(definition.Methods));
+		if (definition.InitialState is null)
+			throw new ArgumentNullException(nameof(definition.InitialState));
+
 		List<FluidApiMethod> methods = GetMethods(definition, out FluidApiMethod initialMethod);
 		List<FluidApiState>  states  = GetMinimalStates(methods, initialMethod, out FluidApiState initialState);
 
@@ -84,19 +92,40 @@ internal class FluidApiDefinitionParser
 		{
 			return state;
 		}
-		
+
 		List<FluidApiArgument> args = method.Arguments.Select(a => new FluidApiArgument(a.Name, a.Type, a.DefaultValue)).ToList();
-		
+
 		List<FluidGenericArgument> genericArgs = method.GenericArguments.Select(a => new FluidGenericArgument(a.Name, a.Constraints)).ToList();
-		
+
 		FluidApiMethod newMethod = new(method.Name, method.ReturnType, [], args, genericArgs);
 		stateDict.Add(method, newMethod);
 
-		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => definition.Methods.Single(d => d.Name == m)).ToList();
+		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => FindMethodByName(definition, m)).ToList();
 		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(definition, td, stateDict)).ToList();
 
 		transitionMethods.ForEach(t => newMethod.CanTransitionTo.Add(t));
 
 		return newMethod;
+	}
+
+	private FluidApiMethodDefinition FindMethodByName(FluidApiDefinition definition, string methodName)
+	{
+		FluidApiMethodDefinition[] matches = definition.Methods
+			.Where(d => d.Name == methodName)
+			.ToArray();
+
+		if (matches.Length == 0)
+		{
+			throw new InvalidOperationException(
+				$"Method '{methodName}' referenced in CanTransitionTo does not exist");
+		}
+
+		if (matches.Length > 1)
+		{
+			throw new InvalidOperationException(
+				$"Duplicate method name '{methodName}' found");
+		}
+
+		return matches[0];
 	}
 }
