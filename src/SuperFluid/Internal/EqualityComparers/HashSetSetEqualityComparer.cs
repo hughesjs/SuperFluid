@@ -1,21 +1,25 @@
 namespace SuperFluid.Internal.EqualityComparers;
 
-public class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> where T: notnull
+internal class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> where T: notnull
 {
 	public bool Equals(HashSet<T>? x, HashSet<T>? y)
 	{
-		return !ReferenceEquals(x, null) && !ReferenceEquals(y, null) && x.SetEquals(y);
+		if (x is null && y is null) return true;
+		if (x is null || y is null) return false;
+		return x.SetEquals(y);
 	}
 
 	public int GetHashCode(HashSet<T>? set)
 	{
-		int hashCode = 0;
+		if (set is null) return 0;
+		
+		HashCode hashCode = new();
 
-		if (set is not null)
+		foreach (T? code in set.OrderBy(c => c.GetHashCode()))
 		{
-			hashCode = set.Aggregate(hashCode, (current, t) => current ^ set.Comparer.GetHashCode(t) & 0x7FFFFFFF);
+			hashCode.Add(code);
 		}
 
-		return hashCode;
+		return hashCode.ToHashCode();
 	}    
 } 

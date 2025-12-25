@@ -15,16 +15,16 @@ internal record FluidApiMethod
 
         // We need to order the arguments so that the ones with defaults are last
         FluidApiArgument[] enumeratedArgs = args as FluidApiArgument[] ?? args.ToArray();
-        var orderedArgs = enumeratedArgs.Where(a => a.DefaultValue is null).Concat(enumeratedArgs.Where(a => a.DefaultValue is not null)).ToList();
+        List<FluidApiArgument> orderedArgs = enumeratedArgs.Where(a => a.DefaultValue is null).Concat(enumeratedArgs.Where(a => a.DefaultValue is not null)).ToList();
         Arguments = [..orderedArgs];
     }
 
     internal string Name { get; init; }
 
     internal string? ReturnType { get; init; }
-    internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = new();
+    internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = [];
 
-    internal HashSet<FluidApiArgument> Arguments { get; init; } = new();
+    internal HashSet<FluidApiArgument> Arguments { get; init; } = [];
 
-    internal HashSet<FluidGenericArgument> GenericArguments { get; init; } = new();
+    internal HashSet<FluidGenericArgument> GenericArguments { get; init; } = [];
 }
