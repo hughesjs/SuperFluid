@@ -4,7 +4,7 @@ internal class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> whe
 {
 	public bool Equals(HashSet<T>? x, HashSet<T>? y)
 	{
-		return !ReferenceEquals(x, null) && !ReferenceEquals(y, null) && x.SetEquals(y);
+		return x is not null && y is not null && x.SetEquals(y);
 	}
 
 	public int GetHashCode(HashSet<T>? set)
