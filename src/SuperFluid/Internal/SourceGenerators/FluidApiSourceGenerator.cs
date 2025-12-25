@@ -1,4 +1,6 @@
+using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using SuperFluid.Internal.Comparers;
 using SuperFluid.Internal.Services;
 using YamlDotNet.Serialization;
@@ -28,7 +30,7 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             Dictionary<string, string> generatedSource = generatorService.Generate(nameAndContent.Content);
             foreach (KeyValuePair<string, string> kvp in generatedSource)
             {
-                spc.AddSource(kvp.Key, kvp.Value);
+                spc.AddSource(kvp.Key, SourceText.From(kvp.Value, Encoding.UTF8));
             }
         });
     }

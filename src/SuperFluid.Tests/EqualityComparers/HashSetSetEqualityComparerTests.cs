@@ -221,8 +221,8 @@ public class HashSetSetEqualityComparerTests
 	[Fact]
 	public void CanBeUsedAsDictionaryKey()
 	{
-		var comparer = new HashSetSetEqualityComparer<string>();
-		var dictionary = new Dictionary<HashSet<string>, string>(comparer);
+		HashSetSetEqualityComparer<string> comparer = new();
+		Dictionary<HashSet<string>, string> dictionary = new(comparer);
 		HashSet<string> key1 = ["a", "b", "c"];
 		HashSet<string> key2 = ["c", "a", "b"];
 
@@ -235,7 +235,7 @@ public class HashSetSetEqualityComparerTests
 	[Fact]
 	public void RemovesDuplicateSetsWhenUsedWithDistinct()
 	{
-		var comparer = new HashSetSetEqualityComparer<string>();
+		HashSetSetEqualityComparer<string> comparer = new();
 		List<HashSet<string>> sets =
 		[
 			["a", "b"],
@@ -245,7 +245,7 @@ public class HashSetSetEqualityComparerTests
 			["c", "d"]
 		];
 
-		var distinct = sets.Distinct(comparer).ToList();
+		List<HashSet<string>> distinct = sets.Distinct(comparer).ToList();
 
 		distinct.Count.ShouldBe(2);
 	}

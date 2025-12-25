@@ -15,88 +15,73 @@ public class FluidApiDefinitionParserTests
 	private static readonly FluidApiMethodDefinition Init = new()
 															 {
 																 Name = "Initialize",
-																 CanTransitionTo = new()
-																				   {
-																					   "Unlock"
-																				   }
-															 };
+																 CanTransitionTo = ["Unlock"]
+                                                             };
 	
 	private static readonly FluidApiMethodDefinition InitSimple = new()
 																   {
 																	   Name = "Initialize",
-																	   CanTransitionTo = new()
-																						 {
-																							 "DropDead"
-																						 }
-																   };
+																	   CanTransitionTo = ["DropDead"]
+                                                                   };
 
 	private static readonly FluidApiMethodDefinition Unlock = new()
 															   {
 																   Name = "Unlock",
-																   CanTransitionTo = new()
-																					 {
-																						 "Enter",
-																						 "Lock"
-																					 }
-															   };
+																   CanTransitionTo =
+                                                                   [
+                                                                       "Enter",
+                                                                       "Lock"
+                                                                   ]
+                                                               };
 
 	private static readonly FluidApiMethodDefinition Lock = new()
 															 {
 																 Name = "Lock",
-																 CanTransitionTo = new()
-																				   {
-																					   "Unlock"
-																				   }
-															 };
+																 CanTransitionTo = ["Unlock"]
+                                                             };
 
 	private static readonly FluidApiMethodDefinition Enter = new()
 															  {
 																  Name = "Enter",
-																  CanTransitionTo = new()
-																					{
-																						"Start",
-																						"Exit"
-																					}
-															  };
+																  CanTransitionTo =
+                                                                  [
+                                                                      "Start",
+                                                                      "Exit"
+                                                                  ]
+                                                              };
 
 	private static readonly FluidApiMethodDefinition Exit = new()
 															 {
 																 Name = "Exit",
-																 CanTransitionTo = new()
-																				   {
-																					   "Lock",
-																					   "Enter"
-																				   }
-															 };
+																 CanTransitionTo =
+                                                                 [
+                                                                     "Lock",
+                                                                     "Enter"
+                                                                 ]
+                                                             };
 
 	private static readonly FluidApiMethodDefinition Start = new()
 															  {
 																  Name = "Start",
-																  CanTransitionTo = new()
-																					{
-																						"Stop"
-																					},
-																  Arguments = new()
-																			  {
-																				  Speed
-																			  }
-															  };
+																  CanTransitionTo = ["Stop"],
+																  Arguments = [Speed]
+                                                              };
 
 	private static readonly FluidApiMethodDefinition Stop = new()
 															 {
 																 Name = "Stop",
-																 CanTransitionTo = new()
-																				   {
-																					   "Start",
-																					   "Exit"
-																				   }
-															 };
+																 CanTransitionTo =
+                                                                 [
+                                                                     "Start",
+                                                                     "Exit"
+                                                                 ]
+                                                             };
 
 	private static readonly FluidApiMethodDefinition DropDead = new()
 																 {
 																	 Name            = "DropDead",
-																	 CanTransitionTo = new()
-																 };
+																	 CanTransitionTo = []
+                                                                 };
 
 	[Fact]
 	public void CanDeserializeSimpleCase()
@@ -106,11 +91,8 @@ public class FluidApiDefinitionParserTests
 											Name         = "Simple",
 											Namespace    = "Simple.Test",
 											InitialState = InitSimple,
-											Methods = new()
-													  {
-														  DropDead
-													  }
-										};
+											Methods = [DropDead]
+                                        };
 
 		FluidApiDefinitionParser parser = new();
 		FluidApiModel            model  = parser.Parse(definition);
@@ -134,16 +116,16 @@ public class FluidApiDefinitionParserTests
 											Name         = "Simple",
 											Namespace    = "Simple.Test",
 											InitialState = Init,
-											Methods = new()
-													  {
-														  Lock,
-														  Unlock,
-														  Enter,
-														  Exit,
-														  Start,
-														  Stop
-													  }
-										};
+											Methods =
+                                            [
+                                                Lock,
+                                                Unlock,
+                                                Enter,
+                                                Exit,
+                                                Start,
+                                                Stop
+                                            ]
+                                        };
 
 		FluidApiDefinitionParser parser = new();
 		FluidApiModel            model  = parser.Parse(definition);
