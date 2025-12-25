@@ -20,7 +20,8 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             .Select((text, cancellationToken)
                 => (Name: Path.GetFileNameWithoutExtension(text.Path),
                     Content: text.GetText(cancellationToken)!.ToString()))
-            .WithComparer(new YamlContentComparer());
+            .WithComparer(new YamlContentComparer())
+            .WithTrackingName("YamlContent");
 
         context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
         {
