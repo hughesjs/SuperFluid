@@ -217,9 +217,29 @@ Methods:
     ReturnType: "string"
 ```
 
-Unfortunately, Roslyn isn't great at giving you feedback for source generation errors. In Rider, you can find them under `Problems > Toolset, Environment` if it's actually run.
+## Error Reporting
 
-I plan to add an analyzer to the project that can give actual feedback to you but this might take a while.
+SuperFluid provides comprehensive diagnostic reporting to help you identify and fix issues in your grammar files. Errors are reported directly in your IDE's Problems view with clear, actionable messages.
+
+### Diagnostic Codes
+
+SuperFluid reports the following diagnostic codes:
+
+- **SF0001**: Invalid YAML syntax - The YAML file contains syntax errors
+- **SF0002**: Missing required field - A required field (Name, Namespace, InitialState, or Methods) is missing
+- **SF0003**: YAML type mismatch - A field has an unexpected type
+- **SF0004**: Empty YAML file - The .fluid.yml file is empty or contains only whitespace
+- **SF0005**: Invalid transition reference - A CanTransitionTo list references a non-existent method
+- **SF0006**: Duplicate method name - Multiple methods have the same name
+- **SF0007**: Empty generic constraints - A generic argument has an empty constraints list
+- **SF0008**: State name collision - Multiple states would generate the same interface name
+- **SF0009**: No states generated - The state machine definition resulted in no valid states
+- **SF0010**: Invalid C# identifier - A name is not a valid C# identifier
+- **SF0011**: Unexpected generation error - An unexpected error occurred (please report as a bug)
+- **SF0012**: No .fluid.yml files found - No grammar files were found in AdditionalFiles
+- **SF0013**: Unreachable method - A method is not reachable from the initial state (warning)
+
+All errors include the file name and a description of the issue to help you quickly identify and fix problems.
 
 ## Registering Your Grammar File with SuperFluid
 
