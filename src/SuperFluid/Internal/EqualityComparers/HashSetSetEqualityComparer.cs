@@ -1,6 +1,6 @@
 namespace SuperFluid.Internal.EqualityComparers;
 
-public class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> where T: notnull
+internal class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> where T: notnull
 {
 	public bool Equals(HashSet<T>? x, HashSet<T>? y)
 	{

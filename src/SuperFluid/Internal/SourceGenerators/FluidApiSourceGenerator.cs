@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using SuperFluid.Internal.Comparers;
 using SuperFluid.Internal.Services;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -9,30 +9,32 @@ namespace SuperFluid.Internal.SourceGenerators;
 [Generator]
 internal class FluidApiSourceGenerator : IIncrementalGenerator
 {
-	private readonly FluidGeneratorService _generatorService;
+    private readonly FluidGeneratorService _generatorService;
 
-	public FluidApiSourceGenerator()
-	{
-		IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
-		_generatorService = new(deserializer, new());
-	}
+    public FluidApiSourceGenerator()
+    {
+        IDeserializer deserializer = new DeserializerBuilder().WithNamingConvention(NullNamingConvention.Instance).Build();
+        _generatorService = new(deserializer, new());
+    }
 
-	public void Initialize(IncrementalGeneratorInitializationContext context)
-	{
-		//SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        //SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
-		IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
-		IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts.Select((text, cancellationToken)
-																										  => (Name: Path.GetFileNameWithoutExtension(text.Path),
-																											  Content: text.GetText(cancellationToken)!.ToString()));
+        IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
+        IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts
+            .Select((text, cancellationToken)
+                => (Name: Path.GetFileNameWithoutExtension(text.Path),
+                    Content: text.GetText(cancellationToken)!.ToString()))
+            .WithComparer(new YamlContentComparer());
 
-		context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
-													   {
-														   Dictionary<string, string> generatedSource = _generatorService.Generate(nameAndContent.Content);
-														   foreach (var kvp in generatedSource)
-														   {
-															   spc.AddSource(kvp.Key, kvp.Value);
-														   }
-													   });
-	}
+        context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
+        {
+            Dictionary<string, string> generatedSource = _generatorService.Generate(nameAndContent.Content);
+            foreach (KeyValuePair<string, string> kvp in generatedSource)
+            {
+                spc.AddSource(kvp.Key, kvp.Value);
+            }
+        });
+    }
 }
