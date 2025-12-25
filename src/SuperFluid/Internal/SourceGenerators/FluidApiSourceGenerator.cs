@@ -15,11 +15,11 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
     {
         //SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
-        IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml"));
+        IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase));
         IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts
             .Select((text, cancellationToken)
                 => (Name: Path.GetFileNameWithoutExtension(text.Path),
-                    Content: text.GetText(cancellationToken)!.ToString()))
+                    Content: text.GetText(cancellationToken)?.ToString() ?? string.Empty))
             .WithComparer(new YamlContentComparer())
             .WithTrackingName("YamlContent");
 

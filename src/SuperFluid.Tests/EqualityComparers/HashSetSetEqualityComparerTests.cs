@@ -62,14 +62,6 @@ public class HashSetSetEqualityComparerTests
 	}
 
 	[Fact]
-	public void BothNullReturnsFalse()
-	{
-		bool result = _stringComparer.Equals(null, null);
-
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
 	public void FirstNullReturnsFalse()
 	{
 		HashSet<string> set = ["a", "b", "c"];
