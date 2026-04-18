@@ -7,6 +7,7 @@ internal record FluidApiModel
 {
     public required string               Name                         { get; init; }
     public required string               Namespace                    { get; init; }
+    public          string?              Description                  { get; init; }
     public required FluidApiMethod       InitialMethod                { get; init; }
 
     // Might actually be able to remove this

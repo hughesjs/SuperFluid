@@ -595,6 +595,151 @@ public class FluidGeneratorServiceTests
 		result.Diagnostics[0].Id.ShouldBe("SF0016");
 	}
 
+	// -------------------------------------------------------------------------
+	// XML documentation tests
+	// -------------------------------------------------------------------------
+
+	[Fact]
+	public void GenerateEmitsXmlDocOnCompoundInterfaceWhenDescriptionProvided()
+	{
+		string yaml = """
+		              Name: "ITestActor"
+		              Namespace: "Test"
+		              Description: "My car actor"
+		              InitialState:
+		                Name: "Start"
+		                CanTransitionTo: ["DoSomething"]
+		              Methods:
+		                - Name: "DoSomething"
+		                  CanTransitionTo: []
+		              """;
+
+		GenerationResult result = _sut.Generate(yaml, "test.fluid.yml");
+
+		result.IsSuccess.ShouldBeTrue();
+		string compoundSource = result.GeneratedFiles!["ITestActor.fluid.g.cs"];
+		compoundSource.ShouldContain("/// <summary>");
+		compoundSource.ShouldContain("/// My car actor");
+		compoundSource.ShouldContain("/// </summary>");
+		int docIndex = compoundSource.IndexOf("/// <summary>", StringComparison.Ordinal);
+		int interfaceIndex = compoundSource.IndexOf("public interface ITestActor", StringComparison.Ordinal);
+		docIndex.ShouldBeLessThan(interfaceIndex);
+	}
+
+	[Fact]
+	public void GenerateEmitsXmlDocOnMethodWhenDescriptionProvided()
+	{
+		string yaml = """
+		              Name: "ITestActor"
+		              Namespace: "Test"
+		              InitialState:
+		                Name: "Start"
+		                CanTransitionTo: ["Lock"]
+		              Methods:
+		                - Name: "Lock"
+		                  Description: "Locks the car"
+		                  CanTransitionTo: ["Start"]
+		              """;
+
+		GenerationResult result = _sut.Generate(yaml, "test.fluid.yml");
+
+		result.IsSuccess.ShouldBeTrue();
+		string lockStateSource = result.GeneratedFiles!.Values.First(s => s.Contains("public ICanStart Lock()"));
+		lockStateSource.ShouldContain("/// <summary>");
+		lockStateSource.ShouldContain("/// Locks the car");
+		lockStateSource.ShouldContain("/// </summary>");
+		int docIndex = lockStateSource.IndexOf("/// <summary>", StringComparison.Ordinal);
+		int methodIndex = lockStateSource.IndexOf("public ICanStart Lock()", StringComparison.Ordinal);
+		docIndex.ShouldBeLessThan(methodIndex);
+	}
+
+	[Fact]
+	public void GenerateEmitsXmlDocOnInitialMethodInCompoundInterfaceWhenDescriptionProvided()
+	{
+		string yaml = """
+		              Name: "ITestActor"
+		              Namespace: "Test"
+		              InitialState:
+		                Name: "Start"
+		                Description: "Initialises the actor"
+		                CanTransitionTo: ["DoSomething"]
+		              Methods:
+		                - Name: "DoSomething"
+		                  CanTransitionTo: []
+		              """;
+
+		GenerationResult result = _sut.Generate(yaml, "test.fluid.yml");
+
+		result.IsSuccess.ShouldBeTrue();
+		string compoundSource = result.GeneratedFiles!["ITestActor.fluid.g.cs"];
+		compoundSource.ShouldContain("/// <summary>");
+		compoundSource.ShouldContain("/// Initialises the actor");
+		compoundSource.ShouldContain("/// </summary>");
+		int docIndex = compoundSource.IndexOf("/// <summary>", StringComparison.Ordinal);
+		int methodIndex = compoundSource.IndexOf("public static abstract", StringComparison.Ordinal);
+		docIndex.ShouldBeLessThan(methodIndex);
+	}
+
+	[Fact]
+	public void GenerateEmitsMultiLineXmlDocWhenDescriptionContainsNewlines()
+	{
+		string yaml = "Name: \"ITestActor\"\nNamespace: \"Test\"\nDescription: \"Line one\\nLine two\"\nInitialState:\n  Name: \"Start\"\n  CanTransitionTo: [\"DoSomething\"]\nMethods:\n  - Name: \"DoSomething\"\n    CanTransitionTo: []";
+
+		GenerationResult result = _sut.Generate(yaml, "test.fluid.yml");
+
+		result.IsSuccess.ShouldBeTrue();
+		string compoundSource = result.GeneratedFiles!["ITestActor.fluid.g.cs"];
+		compoundSource.ShouldContain("/// Line one");
+		compoundSource.ShouldContain("/// Line two");
+	}
+
+	[Fact]
+	public void GenerateEscapesXmlSpecialCharactersInDescription()
+	{
+		string yaml = """
+		              Name: "ITestActor"
+		              Namespace: "Test"
+		              Description: "Returns List<T> of items & more"
+		              InitialState:
+		                Name: "Start"
+		                CanTransitionTo: ["DoSomething"]
+		              Methods:
+		                - Name: "DoSomething"
+		                  CanTransitionTo: []
+		              """;
+
+		GenerationResult result = _sut.Generate(yaml, "test.fluid.yml");
+
+		result.IsSuccess.ShouldBeTrue();
+		string compoundSource = result.GeneratedFiles!["ITestActor.fluid.g.cs"];
+		compoundSource.ShouldContain("Returns List&lt;T&gt; of items &amp; more");
+		compoundSource.ShouldNotContain("List<T>");
+		compoundSource.ShouldNotContain("items & more");
+	}
+
+	[Fact]
+	public void GenerateProducesNoXmlDocLinesWhenDescriptionIsAbsent()
+	{
+		string yaml = """
+		              Name: "ITestActor"
+		              Namespace: "Test"
+		              InitialState:
+		                Name: "Start"
+		                CanTransitionTo: ["DoSomething"]
+		              Methods:
+		                - Name: "DoSomething"
+		                  CanTransitionTo: []
+		              """;
+
+		GenerationResult result = _sut.Generate(yaml, "test.fluid.yml");
+
+		result.IsSuccess.ShouldBeTrue();
+		foreach (string source in result.GeneratedFiles!.Values)
+		{
+			source.ShouldNotContain("///");
+		}
+	}
+
 	private const string CanEnterOrLockSource = """
 	                                            namespace SuperFluid.Tests.Cars;
 

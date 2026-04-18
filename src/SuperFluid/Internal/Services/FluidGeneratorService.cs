@@ -250,12 +250,14 @@ internal class FluidGeneratorService
 
 	private string GenerateCompoundInterface(FluidApiModel model)
 	{
+		string interfaceDoc = FormatXmlDoc(model.Description, "");
+		string initMethodDoc = FormatXmlDoc(model.InitialMethod.Description, "\t");
 		string source = $$"""
 							namespace {{model.Namespace}};
 
-							public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => model.StateNames[s]).OrderBy(n => n, StringComparer.Ordinal))}}
+							{{interfaceDoc}}public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => model.StateNames[s]).OrderBy(n => n, StringComparer.Ordinal))}}
 							{
-								public static abstract {{model.StateNames[model.InitializerMethodReturnState]}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
+							{{initMethodDoc}}	public static abstract {{model.StateNames[model.InitializerMethodReturnState]}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
 							}
 							""";
 		return source;
@@ -285,9 +287,40 @@ internal class FluidGeneratorService
 
 		string constraints = method.GenericArguments.Length > 0 ? $" {string.Join(" ", method.GenericArguments.Select(GenerateGenericConstraintSource))}" : string.Empty;
 
-		return $"""
-		        	public {method.ReturnType ?? model.StateNames[state]} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};
-		        """;
+		string doc = FormatXmlDoc(method.Description, "\t");
+
+		return $"{doc}\tpublic {method.ReturnType ?? model.StateNames[state]} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};";
+	}
+
+	/// <summary>
+	/// Returns a formatted XML documentation block for the given description, with each line prefixed by
+	/// <paramref name="indent"/> and "/// ". Returns an empty string when the description is null or whitespace.
+	/// The returned string ends with a newline so it can be prepended directly before the declaration it documents.
+	/// </summary>
+	private static string FormatXmlDoc(string? description, string indent)
+	{
+		if (string.IsNullOrWhiteSpace(description))
+			return string.Empty;
+
+		string escaped = description!
+			.Replace("&", "&amp;")
+			.Replace("<", "&lt;")
+			.Replace(">", "&gt;");
+
+		string[] lines = escaped.Split('\n');
+
+		System.Text.StringBuilder sb = new();
+		sb.AppendLine($"{indent}/// <summary>");
+		foreach (string line in lines)
+		{
+			string trimmed = line.TrimEnd();
+			if (trimmed.Length > 0)
+				sb.AppendLine($"{indent}/// {trimmed}");
+			else
+				sb.AppendLine($"{indent}///");
+		}
+		sb.AppendLine($"{indent}/// </summary>");
+		return sb.ToString();
 	}
 
 	private string GenerateMethodArgsSource(FluidApiArgument a)
