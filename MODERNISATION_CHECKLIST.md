@@ -84,11 +84,12 @@ Nice-to-have improvements that enhance developer experience.
   - Risk: Very low (minor performance improvement)
   - **COMPLETED**: Updated to use `SourceText.From(kvp.Value, Encoding.UTF8)`. Added required using statements for `System.Text` and `Microsoft.CodeAnalysis.Text`. Modern Roslyn best practice with explicit UTF-8 encoding.
 
-- [ ] **3.2 Generate file-scoped namespaces**
-  - File: `src/SuperFluid/Internal/Services/FluidGeneratorService.cs:34-69`
+- [x] **3.2 Generate file-scoped namespaces** ✅
+  - File: `src/SuperFluid/Internal/Services/FluidGeneratorService.cs`
   - Issue: Generated code uses traditional namespace blocks
   - Fix: Change generated code to use `namespace X;` instead of `namespace X { }`
   - Risk: Very low (cosmetic change to generated code)
+  - **COMPLETED (April 2026)**: Verified both generator emit sites (`GenerateCompoundInterface` and `GenerateStateSource`) already emit `namespace X;` file-scoped syntax. The change landed as part of an earlier refactor — the checklist was stale. Test fixtures in `FluidGeneratorServiceTests` already assert file-scoped namespace output.
 
 - [x] **3.3 Update package metadata** ✅
   - File: `src/SuperFluid/SuperFluid.csproj:14`
@@ -136,11 +137,12 @@ Larger features that can be tackled later.
   - Benefit: Better developer experience (mentioned in README as planned)
   - Risk: Medium (new feature area)
 
-- [ ] **4.2 Add XML documentation support**
+- [x] **4.2 Add XML documentation support** ✅
   - Files: YAML schema and generator
   - Feature: Optional `Description` fields in YAML that generate `/// <summary>` comments
   - Benefit: Self-documenting generated interfaces
   - Risk: Low (additive feature)
+  - **COMPLETED (April 2026)**: Added optional `Description` field to `FluidApiDefinition` (compound interface) and `FluidApiMethodDefinition` (each method + initial state). Threaded through `FluidApiModel` / `FluidApiMethod`. New `FormatXmlDoc` helper in `FluidGeneratorService` escapes `&`, `<`, `>` and emits `///` lines one-per-source-line with correct indentation. Missing descriptions produce zero `///` output — existing fixtures unchanged. 6 new tests (XML escaping, multi-line block scalars, interface- and method-level descriptions, missing description, null handling).
 
 - [ ] **4.3 Improve state name generation**
   - File: `src/SuperFluid/Internal/Model/FluidApiState.cs:8`
@@ -149,11 +151,10 @@ Larger features that can be tackled later.
   - Feature: Maximum name length with ellipsis or hash-based names
   - Risk: Medium (changes core naming logic)
 
-- [ ] **4.4 Multi-target framework support**
+- [~] **4.4 Multi-target framework support** — WON'T DO
   - File: `src/SuperFluid/SuperFluid.csproj`
   - Feature: Target `net6.0` or `net8.0` alongside `netstandard2.0`
-  - Benefit: Better performance and newer APIs while maintaining compatibility
-  - Risk: Medium (build and packaging complexity)
+  - **Dropped (April 2026)**: Roslyn source generators must load as netstandard2.0 — that's what the Roslyn host picks up from `analyzers/dotnet/cs/`. A multi-targeted net8.0 assembly would sit in the nupkg unused, since `DevelopmentDependency=true` and `IncludeBuildOutput=false` explicitly exclude SuperFluid as a runtime library. Modern APIs would be unavailable at generator runtime regardless. No benefit for the current single-use (analyzer-only) packaging model.
 
 ---
 

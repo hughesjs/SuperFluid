@@ -2,15 +2,13 @@ using System.Diagnostics;
 
 namespace SuperFluid.Internal.Model;
 
-[DebuggerDisplay("{Name}")]
+[DebuggerDisplay("State with {MethodTransitions.Count} transitions")]
 internal record FluidApiState
 {
-	internal string                                    Name              => MethodTransitions.Count == 0 ? "Terminating State" : $"ICan{MethodTransitions.Keys.Select(t => t.Name).OrderBy(n => n, StringComparer.Ordinal).Aggregate((a, b) => $"{a}Or{b}")}";
 	internal Dictionary<FluidApiMethod, FluidApiState> MethodTransitions { get; init; } = new();
 
 	public FluidApiState(Dictionary<FluidApiMethod, FluidApiState> methodTransitions)
 	{
 		MethodTransitions = methodTransitions;
 	}
-
 }
