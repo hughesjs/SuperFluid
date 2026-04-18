@@ -149,11 +149,10 @@ Larger features that can be tackled later.
   - Feature: Maximum name length with ellipsis or hash-based names
   - Risk: Medium (changes core naming logic)
 
-- [ ] **4.4 Multi-target framework support**
+- [~] **4.4 Multi-target framework support** — WON'T DO
   - File: `src/SuperFluid/SuperFluid.csproj`
   - Feature: Target `net6.0` or `net8.0` alongside `netstandard2.0`
-  - Benefit: Better performance and newer APIs while maintaining compatibility
-  - Risk: Medium (build and packaging complexity)
+  - **Dropped (April 2026)**: Roslyn source generators must load as netstandard2.0 — that's what the Roslyn host picks up from `analyzers/dotnet/cs/`. A multi-targeted net8.0 assembly would sit in the nupkg unused, since `DevelopmentDependency=true` and `IncludeBuildOutput=false` explicitly exclude SuperFluid as a runtime library. Modern APIs would be unavailable at generator runtime regardless. No benefit for the current single-use (analyzer-only) packaging model.
 
 ---
 
