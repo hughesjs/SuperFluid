@@ -12,14 +12,16 @@ internal class HashSetSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> whe
 	public int GetHashCode(HashSet<T>? set)
 	{
 		if (set is null) return 0;
-		
-		HashCode hashCode = new();
 
-		foreach (T? code in set.OrderBy(c => c.GetHashCode()))
+		// XOR is commutative and associative, so the result is independent of
+		// iteration order. Seed with Count so sets of different sizes whose
+		// elements happen to XOR to the same value still hash differently.
+		int hash = set.Count;
+		foreach (T item in set)
 		{
-			hashCode.Add(code);
+			hash ^= EqualityComparer<T>.Default.GetHashCode(item);
 		}
 
-		return hashCode.ToHashCode();
-	}    
+		return hash;
+	}
 } 

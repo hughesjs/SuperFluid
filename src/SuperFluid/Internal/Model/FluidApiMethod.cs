@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 
 namespace SuperFluid.Internal.Model;
@@ -13,10 +14,10 @@ internal record FluidApiMethod
         CanTransitionTo = [..transitions];
         GenericArguments = [..genericArgs];
 
-        // We need to order the arguments so that the ones with defaults are last
+        // Order arguments so that defaults are last (required by C# method signatures).
+        // An ImmutableArray preserves this ordering; a HashSet would not.
         FluidApiArgument[] enumeratedArgs = args as FluidApiArgument[] ?? args.ToArray();
-        List<FluidApiArgument> orderedArgs = enumeratedArgs.Where(a => a.DefaultValue is null).Concat(enumeratedArgs.Where(a => a.DefaultValue is not null)).ToList();
-        Arguments = [..orderedArgs];
+        Arguments = [..enumeratedArgs.Where(a => a.DefaultValue is null), ..enumeratedArgs.Where(a => a.DefaultValue is not null)];
     }
 
     internal string Name { get; init; }
@@ -24,7 +25,7 @@ internal record FluidApiMethod
     internal string? ReturnType { get; init; }
     internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = [];
 
-    internal HashSet<FluidApiArgument> Arguments { get; init; } = [];
+    internal ImmutableArray<FluidApiArgument> Arguments { get; init; } = [];
 
-    internal HashSet<FluidGenericArgument> GenericArguments { get; init; } = [];
+    internal ImmutableArray<FluidGenericArgument> GenericArguments { get; init; } = [];
 }

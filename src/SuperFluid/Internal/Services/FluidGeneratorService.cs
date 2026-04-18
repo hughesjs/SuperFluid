@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.Diagnostics;
+using SuperFluid.Internal.Exceptions;
 using SuperFluid.Internal.Model;
 using SuperFluid.Internal.Parsers;
 using Microsoft.CodeAnalysis;
@@ -48,17 +49,6 @@ internal class FluidGeneratorService
 				ex.Message);
 			return GenerationResult.Failure(diagnostic);
 		}
-		catch (Exception ex) when (ex.Message.Contains("Property") || ex.Message.Contains("required"))
-		{
-			// Catches deserialization errors for missing required fields or type mismatches
-			string fieldName = ExtractFieldName(ex.Message);
-			Diagnostic diagnostic = Diagnostic.Create(
-				DiagnosticDescriptors.MissingRequiredField,
-				Location.None,
-				fieldName,
-				filePath);
-			return GenerationResult.Failure(diagnostic);
-		}
 
 		if (definition is null)
 		{
@@ -86,6 +76,26 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Namespace",
+				filePath);
+			return GenerationResult.Failure(diagnostic);
+		}
+
+		if (definition.InitialState is null)
+		{
+			Diagnostic diagnostic = Diagnostic.Create(
+				DiagnosticDescriptors.MissingRequiredField,
+				Location.None,
+				"InitialState",
+				filePath);
+			return GenerationResult.Failure(diagnostic);
+		}
+
+		if (definition.Methods is null)
+		{
+			Diagnostic diagnostic = Diagnostic.Create(
+				DiagnosticDescriptors.MissingRequiredField,
+				Location.None,
+				"Methods",
 				filePath);
 			return GenerationResult.Failure(diagnostic);
 		}
@@ -134,33 +144,29 @@ internal class FluidGeneratorService
 		{
 			model = _definitionParser.Parse(definition);
 		}
-		catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))
+		catch (MethodNotFoundException ex)
 		{
-			string[] parts = ex.Message.Split('\'');
-			string methodName = parts.Length > 1 ? parts[1] : "unknown";
 			Diagnostic diagnostic = Diagnostic.Create(
 				DiagnosticDescriptors.InvalidTransitionReference,
 				Location.None,
-				"unknown",
-				methodName);
+				ex.ReferencingMethod,
+				ex.MissingMethod);
 			return GenerationResult.Failure(diagnostic);
 		}
-		catch (InvalidOperationException ex) when (ex.Message.Contains("Duplicate method name"))
+		catch (DuplicateMethodNameException ex)
 		{
-			string[] parts = ex.Message.Split('\'');
-			string methodName = parts.Length > 1 ? parts[1] : "unknown";
 			Diagnostic diagnostic = Diagnostic.Create(
 				DiagnosticDescriptors.DuplicateMethodName,
 				Location.None,
-				methodName);
+				ex.MethodName);
 			return GenerationResult.Failure(diagnostic);
 		}
-		catch (ArgumentException ex) when (ex.ParamName == "constraints")
+		catch (EmptyConstraintsException ex)
 		{
 			Diagnostic diagnostic = Diagnostic.Create(
 				DiagnosticDescriptors.EmptyConstraintsList,
 				Location.None,
-				"unknown");
+				ex.GenericArgumentName);
 			return GenerationResult.Failure(diagnostic);
 		}
 		catch (Exception ex)
@@ -203,20 +209,6 @@ internal class FluidGeneratorService
 		return GenerationResult.Success(newSourceFiles);
 	}
 
-	private string ExtractFieldName(string exceptionMessage)
-	{
-		if (exceptionMessage.Contains("Property 'Name'"))
-			return "Name";
-		if (exceptionMessage.Contains("Property 'Namespace'"))
-			return "Namespace";
-		if (exceptionMessage.Contains("Property 'InitialState'"))
-			return "InitialState";
-		if (exceptionMessage.Contains("Property 'Methods'"))
-			return "Methods";
-
-		return "unknown field";
-	}
-
 	private bool IsValidNamespace(string namespaceName)
 	{
 		if (string.IsNullOrWhiteSpace(namespaceName))
@@ -231,7 +223,7 @@ internal class FluidGeneratorService
 		string source = $$"""
 							namespace {{model.Namespace}};
 
-							public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => s.Name))}}
+							public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => s.Name).OrderBy(n => n, StringComparer.Ordinal))}}
 							{
 								public static abstract {{model.InitializerMethodReturnState.Name}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
 							}
@@ -241,7 +233,9 @@ internal class FluidGeneratorService
 
 	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model) 
 	{
-		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions.Select((kvp) => GenerateMethodSource(kvp.Key, kvp.Value));
+		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions
+			.OrderBy(kvp => kvp.Key.Name, StringComparer.Ordinal)
+			.Select(kvp => GenerateMethodSource(kvp.Key, kvp.Value));
 
 		string source = $$"""
 						namespace {{model.Namespace}};
@@ -257,9 +251,9 @@ internal class FluidGeneratorService
 
 	private string GenerateMethodSource(FluidApiMethod method, FluidApiState state)
 	{
-		string genericArgs = method.GenericArguments.Count > 0 ? $"<{string.Join(",", method.GenericArguments.Select(a => $"{a.Name}"))}>" : string.Empty;
+		string genericArgs = method.GenericArguments.Length > 0 ? $"<{string.Join(",", method.GenericArguments.Select(a => $"{a.Name}"))}>" : string.Empty;
 
-		string constraints = method.GenericArguments.Count > 0 ? $" {string.Join(" ", method.GenericArguments.Select(GenerateGenericConstraintSource))}" : string.Empty;
+		string constraints = method.GenericArguments.Length > 0 ? $" {string.Join(" ", method.GenericArguments.Select(GenerateGenericConstraintSource))}" : string.Empty;
 
 		return $"""
 		        	public {method.ReturnType ?? state.Name} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};
