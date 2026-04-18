@@ -27,7 +27,7 @@ public class FluidGeneratorServiceTests
 		result.GeneratedFiles.ShouldNotBeNull();
 		result.GeneratedFiles.Count.ShouldBe(5);
 		result.Diagnostics.ShouldBeEmpty();
-		result.GeneratedFiles["ICanLockOrEnter.fluid.g.cs"].ShouldBe(CanLockOrEnterSource);
+		result.GeneratedFiles["ICanEnterOrLock.fluid.g.cs"].ShouldBe(CanEnterOrLockSource);
 		result.GeneratedFiles["ICarActor.fluid.g.cs"].ShouldBe(CarActorSource);
 	}
 
@@ -235,20 +235,20 @@ public class FluidGeneratorServiceTests
 		result.Diagnostics[0].Id.ShouldBe("SF0010");
 	}
 
-	private const string CanLockOrEnterSource = """
+	private const string CanEnterOrLockSource = """
 	                                            namespace SuperFluid.Tests.Cars;
 
-	                                            public interface ICanLockOrEnter
+	                                            public interface ICanEnterOrLock
 	                                            {
+	                                            	public ICanExitOrStart Enter();
 	                                            	public ICanUnlock Lock();
-	                                            	public ICanStartOrExit Enter();
 	                                            }
 	                                            """;
 
 	private const string CarActorSource = """
 	                                      namespace SuperFluid.Tests.Cars;
 
-	                                      public interface ICarActor: ICanLockOrEnter,ICanUnlock,ICanStartOrExit,ICanStopOrBuild
+	                                      public interface ICarActor: ICanBuildOrStop,ICanEnterOrLock,ICanExitOrStart,ICanUnlock
 	                                      {
 	                                      	public static abstract ICanUnlock Initialize();
 	                                      }

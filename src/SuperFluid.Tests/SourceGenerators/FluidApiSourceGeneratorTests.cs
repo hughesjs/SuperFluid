@@ -30,7 +30,7 @@ public class FluidApiSourceGeneratorTests
 		generatedSources.IsDefault.ShouldBeFalse("GeneratedSources should be initialized");
 		generatedSources.Length.ShouldBe(5);
 
-		generatedSources.ShouldContain(r => r.HintName == "ICanLockOrEnter.fluid.g.cs");
+		generatedSources.ShouldContain(r => r.HintName == "ICanEnterOrLock.fluid.g.cs");
 		generatedSources.ShouldContain(r => r.HintName == "ICarActor.fluid.g.cs");
 
 		// No diagnostics reported

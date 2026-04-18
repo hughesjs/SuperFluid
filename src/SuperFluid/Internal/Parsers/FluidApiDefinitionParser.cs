@@ -1,6 +1,7 @@
 using System;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.EqualityComparers;
+using SuperFluid.Internal.Exceptions;
 using SuperFluid.Internal.Model;
 
 namespace SuperFluid.Internal.Parsers;
@@ -100,7 +101,7 @@ internal class FluidApiDefinitionParser
 		FluidApiMethod newMethod = new(method.Name, method.ReturnType, [], args, genericArgs);
 		stateDict.Add(method, newMethod);
 
-		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => FindMethodByName(definition, m)).ToList();
+		List<FluidApiMethodDefinition> transitionDefinitions = method.CanTransitionTo.Select(m => FindMethodByName(definition, m, method.Name)).ToList();
 		List<FluidApiMethod>           transitionMethods     = transitionDefinitions.Select(td => FindOrCreateMethod(definition, td, stateDict)).ToList();
 
 		transitionMethods.ForEach(t => newMethod.CanTransitionTo.Add(t));
@@ -108,7 +109,7 @@ internal class FluidApiDefinitionParser
 		return newMethod;
 	}
 
-	private FluidApiMethodDefinition FindMethodByName(FluidApiDefinition definition, string methodName)
+	private FluidApiMethodDefinition FindMethodByName(FluidApiDefinition definition, string methodName, string referencingMethod)
 	{
 		IEnumerable<FluidApiMethodDefinition> allMethods = definition.Methods.Append(definition.InitialState);
 		FluidApiMethodDefinition[] matches = allMethods
@@ -117,14 +118,12 @@ internal class FluidApiDefinitionParser
 
 		if (matches.Length == 0)
 		{
-			throw new InvalidOperationException(
-				$"Method '{methodName}' referenced in CanTransitionTo does not exist");
+			throw new MethodNotFoundException(referencingMethod, methodName);
 		}
 
 		if (matches.Length > 1)
 		{
-			throw new InvalidOperationException(
-				$"Duplicate method name '{methodName}' found");
+			throw new DuplicateMethodNameException(methodName);
 		}
 
 		return matches[0];

@@ -1,7 +1,6 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using SuperFluid.Internal.Comparers;
 using SuperFluid.Internal.Diagnostics;
 using SuperFluid.Internal.Parsers;
 using SuperFluid.Internal.Services;
@@ -22,7 +21,6 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             .Select((text, cancellationToken)
                 => (Name: Path.GetFileNameWithoutExtension(text.Path),
                     Content: text.GetText(cancellationToken)?.ToString() ?? string.Empty))
-            .WithComparer(new YamlContentComparer())
             .WithTrackingName("YamlContent");
 
         context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
