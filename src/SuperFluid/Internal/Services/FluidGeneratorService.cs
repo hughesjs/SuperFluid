@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.Diagnostics;
@@ -169,6 +170,23 @@ internal class FluidGeneratorService
 				ex.GenericArgumentName);
 			return GenerationResult.Failure(diagnostic);
 		}
+		catch (InvalidStateNameIdentifierException ex)
+		{
+			Diagnostic diagnostic = Diagnostic.Create(
+				DiagnosticDescriptors.InvalidStateNameIdentifier,
+				Location.None,
+				ex.DeclaredName);
+			return GenerationResult.Failure(diagnostic);
+		}
+		catch (AmbiguousStateNameDeclarationException ex)
+		{
+			Diagnostic diagnostic = Diagnostic.Create(
+				DiagnosticDescriptors.AmbiguousStateNameDeclaration,
+				Location.None,
+				ex.FirstName,
+				ex.SecondName);
+			return GenerationResult.Failure(diagnostic);
+		}
 		catch (Exception ex)
 		{
 			Diagnostic diagnostic = Diagnostic.Create(
@@ -176,6 +194,16 @@ internal class FluidGeneratorService
 				Location.None,
 				ex.Message);
 			return GenerationResult.Failure(diagnostic);
+		}
+
+		// Emit SF0014 warnings for user-declared state names that matched no synthesised state
+		List<Diagnostic> warnings = new();
+		foreach (string unmatchedName in model.UnmatchedStateNameWarnings)
+		{
+			warnings.Add(Diagnostic.Create(
+				DiagnosticDescriptors.UnmatchedStateNameDeclaration,
+				Location.None,
+				unmatchedName));
 		}
 
 		// Check for empty states
@@ -192,7 +220,7 @@ internal class FluidGeneratorService
 		try
 		{
 			newSourceFiles = model.States.ToDictionary(
-				s => $"{s.Name}.fluid.g.cs",
+				s => $"{model.StateNames[s]}.fluid.g.cs",
 				s => GenerateStateSource(s, model));
 		}
 		catch (ArgumentException ex) when (ex.Message.Contains("same key"))
@@ -206,7 +234,9 @@ internal class FluidGeneratorService
 
 		newSourceFiles.Add($"{model.Name}.fluid.g.cs", GenerateCompoundInterface(model));
 
-		return GenerationResult.Success(newSourceFiles);
+		return warnings.Count > 0
+			? GenerationResult.SuccessWithWarnings(newSourceFiles, warnings)
+			: GenerationResult.Success(newSourceFiles);
 	}
 
 	private bool IsValidNamespace(string namespaceName)
@@ -223,24 +253,24 @@ internal class FluidGeneratorService
 		string source = $$"""
 							namespace {{model.Namespace}};
 
-							public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => s.Name).OrderBy(n => n, StringComparer.Ordinal))}}
+							public interface {{model.Name}}: {{string.Join(",", model.States.Select(s => model.StateNames[s]).OrderBy(n => n, StringComparer.Ordinal))}}
 							{
-								public static abstract {{model.InitializerMethodReturnState.Name}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
+								public static abstract {{model.StateNames[model.InitializerMethodReturnState]}} {{model.InitialMethod.Name}}({{string.Join(", ", model.InitialMethod.Arguments.Select(a =>$"{a.Type} {a.Name}"))}});
 							}
 							""";
 		return source;
 	}
 
-	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model) 
+	private string GenerateStateSource(FluidApiState fluidApiState, FluidApiModel model)
 	{
 		IEnumerable<string> methodDeclarations = fluidApiState.MethodTransitions
 			.OrderBy(kvp => kvp.Key.Name, StringComparer.Ordinal)
-			.Select(kvp => GenerateMethodSource(kvp.Key, kvp.Value));
+			.Select(kvp => GenerateMethodSource(kvp.Key, kvp.Value, model));
 
 		string source = $$"""
 						namespace {{model.Namespace}};
-						
-						public interface {{fluidApiState.Name}}
+
+						public interface {{model.StateNames[fluidApiState]}}
 						{
 						{{string.Join("\n", methodDeclarations)}}
 						}
@@ -249,14 +279,14 @@ internal class FluidGeneratorService
 		return source;
 	}
 
-	private string GenerateMethodSource(FluidApiMethod method, FluidApiState state)
+	private string GenerateMethodSource(FluidApiMethod method, FluidApiState state, FluidApiModel model)
 	{
 		string genericArgs = method.GenericArguments.Length > 0 ? $"<{string.Join(",", method.GenericArguments.Select(a => $"{a.Name}"))}>" : string.Empty;
 
 		string constraints = method.GenericArguments.Length > 0 ? $" {string.Join(" ", method.GenericArguments.Select(GenerateGenericConstraintSource))}" : string.Empty;
 
 		return $"""
-		        	public {method.ReturnType ?? state.Name} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};
+		        	public {method.ReturnType ?? model.StateNames[state]} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};
 		        """;
 	}
 

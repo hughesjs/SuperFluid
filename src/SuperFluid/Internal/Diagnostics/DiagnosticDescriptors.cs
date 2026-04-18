@@ -119,4 +119,32 @@ internal static class DiagnosticDescriptors
 		category: Category,
 		defaultSeverity: DiagnosticSeverity.Warning,
 		isEnabledByDefault: true);
+
+	// State Naming
+	public static readonly DiagnosticDescriptor UnmatchedStateNameDeclaration = new(
+		id: "SF0014",
+		title: "Unmatched state name declaration",
+		messageFormat: "The StateNames entry '{0}' declares a transition set that does not match any synthesised state. It may have drifted from the current definition.",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Warning,
+		isEnabledByDefault: true,
+		description: "A StateNames entry specifies a Transitions list that does not correspond to any state in the generated state machine. Check that the method names are correct and the state still exists.");
+
+	public static readonly DiagnosticDescriptor InvalidStateNameIdentifier = new(
+		id: "SF0015",
+		title: "Invalid state name identifier",
+		messageFormat: "The declared state name '{0}' is not a valid C# identifier",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "State names declared in StateNames must be valid C# identifiers.");
+
+	public static readonly DiagnosticDescriptor AmbiguousStateNameDeclaration = new(
+		id: "SF0016",
+		title: "Ambiguous state name declaration",
+		messageFormat: "Multiple StateNames entries '{0}' and '{1}' match the same synthesised state",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "Two or more StateNames entries resolve to the same synthesised state. Remove or correct the duplicate entries.");
 }

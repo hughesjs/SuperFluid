@@ -12,6 +12,9 @@ internal record GenerationResult(
 	public static GenerationResult Success(Dictionary<string, string> files)
 		=> new(files, ImmutableArray<Diagnostic>.Empty, true);
 
+	public static GenerationResult SuccessWithWarnings(Dictionary<string, string> files, IEnumerable<Diagnostic> warnings)
+		=> new(files, ImmutableArray.CreateRange(warnings), true);
+
 	public static GenerationResult Failure(params Diagnostic[] diagnostics)
 		=> new(null, ImmutableArray.Create(diagnostics), false);
 }
