@@ -34,6 +34,35 @@ internal static class CompilationHelper
 	}
 
 	/// <summary>
+	/// Creates a CSharpCompilation with one or more arbitrary C# source strings parsed into syntax trees,
+	/// alongside the usual dummy-type tree. Useful for tests that feed grammar-interface declarations
+	/// into the source generator or into symbol-driven services like <c>GrammarInterfaceReader</c>.
+	/// </summary>
+	public static CSharpCompilation CreateCompilationWithGrammarSource(string grammarSource, string? additionalSource = null)
+	{
+		string dummyTypes = """
+			public interface INumber { }
+			""";
+
+		List<SyntaxTree> trees =
+		[
+			CSharpSyntaxTree.ParseText(dummyTypes),
+			CSharpSyntaxTree.ParseText(grammarSource)
+		];
+
+		if (additionalSource is not null)
+		{
+			trees.Add(CSharpSyntaxTree.ParseText(additionalSource));
+		}
+
+		return CSharpCompilation.Create(
+			assemblyName: "TestAssembly",
+			syntaxTrees: trees,
+			references: GetMetadataReferences(),
+			options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+	}
+
+	/// <summary>
 	/// Creates an AdditionalText for testing .fluid.yml files.
 	/// </summary>
 	public static AdditionalText CreateAdditionalText(string fileName, string content)

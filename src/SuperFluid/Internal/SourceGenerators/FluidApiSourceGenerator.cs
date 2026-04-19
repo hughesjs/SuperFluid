@@ -16,6 +16,10 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
     {
         //SpinWait.SpinUntil(() => Debugger.IsAttached); // Manually attach debugger here
 
+        context.RegisterPostInitializationOutput(ctx =>
+            ctx.AddSource("SuperFluid.Attributes.g.cs",
+                SourceText.From(AttributeDefinitions.Source, Encoding.UTF8)));
+
         IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase));
         IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts
             .Select((text, cancellationToken)

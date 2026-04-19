@@ -28,7 +28,8 @@ public class FluidApiSourceGeneratorTests
 		runResult.Results.Length.ShouldBe(1);
 		ImmutableArray<GeneratedSourceResult> generatedSources = runResult.Results[0].GeneratedSources;
 		generatedSources.IsDefault.ShouldBeFalse("GeneratedSources should be initialized");
-		generatedSources.Length.ShouldBe(5);
+		// 5 grammar outputs (4 state interfaces + 1 compound) + 1 ambient attributes source
+		generatedSources.Length.ShouldBe(6);
 
 		generatedSources.ShouldContain(r => r.HintName == "ICanEnterOrLock.fluid.g.cs");
 		generatedSources.ShouldContain(r => r.HintName == "ICarActor.fluid.g.cs");
@@ -101,7 +102,8 @@ public class FluidApiSourceGeneratorTests
 
 		GeneratorDriverRunResult runResult = driver.GetRunResult();
 
-		runResult.Results[0].GeneratedSources.Length.ShouldBe(4);
+		// 2 grammar outputs per YAML file (state + compound, minimal state machine) + 1 ambient attributes source
+		runResult.Results[0].GeneratedSources.Length.ShouldBe(5);
 
 		ImmutableArray<GeneratedSourceResult> sources = runResult.Results[0].GeneratedSources;
 		sources.ShouldContain(s => s.HintName.Contains("IFirstActor"));
@@ -132,7 +134,9 @@ public class FluidApiSourceGeneratorTests
 
 		GeneratorDriverRunResult runResult = driver.GetRunResult();
 
-		runResult.Results[0].GeneratedSources.Length.ShouldBe(0);
+		// No grammar-driven outputs; only the ambient attributes source
+		runResult.Results[0].GeneratedSources.Length.ShouldBe(1);
+		runResult.Results[0].GeneratedSources[0].HintName.ShouldBe("SuperFluid.Attributes.g.cs");
 	}
 
 	[Fact]
@@ -191,7 +195,9 @@ public class FluidApiSourceGeneratorTests
 
 		GeneratorDriverRunResult runResult = driver.GetRunResult();
 
-		runResult.Results[0].GeneratedSources.Length.ShouldBe(0);
+		// No grammar-driven outputs; only the ambient attributes source
+		runResult.Results[0].GeneratedSources.Length.ShouldBe(1);
+		runResult.Results[0].GeneratedSources[0].HintName.ShouldBe("SuperFluid.Attributes.g.cs");
 
 		Diagnostic[] diagnostics = runResult.Results[0].Diagnostics
 			.Where(d => d.Id == "SF0001")
@@ -379,5 +385,27 @@ public class FluidApiSourceGeneratorTests
 			.Where(d => d.Id.StartsWith("SF"))
 			.ToArray();
 		diagnostics.ShouldNotBeEmpty();
+	}
+
+	[Fact]
+	public void GeneratorEmitsAmbientAttributeDefinitionsViaPostInitialisation()
+	{
+		CSharpCompilation compilation = CompilationHelper.CreateCompilation();
+		FluidApiSourceGenerator generator = new();
+
+		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+		driver = driver.RunGenerators(compilation);
+
+		GeneratorDriverRunResult runResult = driver.GetRunResult();
+
+		GeneratedSourceResult attrSource = runResult.Results[0].GeneratedSources
+			.Single(s => s.HintName == "SuperFluid.Attributes.g.cs");
+
+		string content = attrSource.SourceText.ToString();
+		content.ShouldContain("FluidApiGrammarAttribute");
+		content.ShouldContain("InitialAttribute");
+		content.ShouldContain("TransitionsToAttribute");
+		content.ShouldContain("ReturnTypeAttribute");
+		content.ShouldContain("namespace SuperFluid");
 	}
 }
