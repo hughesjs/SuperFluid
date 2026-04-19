@@ -351,7 +351,10 @@ internal class GrammarInterfaceReader
             constraints.Add("class");
         }
 
-        if (typeParam.HasValueTypeConstraint)
+        // `where T : unmanaged` sets both HasValueTypeConstraint and HasUnmanagedTypeConstraint
+        // in Roslyn (because unmanaged implies struct). Only emit "struct" for the plain case;
+        // "struct, unmanaged" is a C# compile error (CS8331).
+        if (typeParam.HasValueTypeConstraint && !typeParam.HasUnmanagedTypeConstraint)
         {
             constraints.Add("struct");
         }

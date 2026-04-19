@@ -285,6 +285,39 @@ namespace Test
     }
 
     [Fact]
+    public void ReadUnmanagedConstraintDoesNotAlsoEmitStruct()
+    {
+        // Roslyn sets both HasValueTypeConstraint and HasUnmanagedTypeConstraint for
+        // `where T : unmanaged` (since unmanaged implies struct). Emitting both keywords
+        // would produce `where T : struct, unmanaged`, which is a C# compile error (CS8331).
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface IUnmanagedGrammar
+    {
+        [Initial, TransitionsTo(nameof(Process))]
+        void Start();
+
+        [TransitionsTo]
+        void Process<T>(T item) where T : unmanaged;
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.IUnmanagedGrammar");
+        GrammarInterfaceReader reader = new();
+
+        FluidApiDefinition definition = reader.Read(symbol);
+
+        FluidApiMethodDefinition processMethod = definition.Methods.Single(m => m.Name == "Process");
+        FluidGenericArgumentDefinition tParam = processMethod.GenericArguments[0];
+
+        tParam.Constraints.ShouldContain("unmanaged");
+        tParam.Constraints.ShouldNotContain("struct");
+    }
+
+    [Fact]
     public void ReadExtractsXmlDocSummaryAsDescription()
     {
         string source = @"
