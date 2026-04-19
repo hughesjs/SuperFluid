@@ -105,12 +105,12 @@ internal static class DiagnosticDescriptors
 	// Info/Warnings
 	public static readonly DiagnosticDescriptor NoFluidYamlFilesFound = new(
 		id: "SF0012",
-		title: "No .fluid.yml files found",
-		messageFormat: "No .fluid.yml files found in AdditionalFiles",
+		title: "No grammar sources found",
+		messageFormat: "No grammar sources found (no .fluid.yml files in AdditionalFiles and no [FluidApiGrammar] interfaces)",
 		category: Category,
 		defaultSeverity: DiagnosticSeverity.Info,
 		isEnabledByDefault: true,
-		description: "Ensure .fluid.yml files are marked as AdditionalFiles in your .csproj.");
+		description: "Ensure .fluid.yml files are marked as AdditionalFiles in your .csproj, or declare an interface decorated with [FluidApiGrammar].");
 
 	public static readonly DiagnosticDescriptor UnusedMethod = new(
 		id: "SF0013",

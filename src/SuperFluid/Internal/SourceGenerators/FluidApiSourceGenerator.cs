@@ -1,6 +1,8 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.Diagnostics;
 using SuperFluid.Internal.Parsers;
 using SuperFluid.Internal.Services;
@@ -20,6 +22,7 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             ctx.AddSource("SuperFluid.Attributes.g.cs",
                 SourceText.From(AttributeDefinitions.Source, Encoding.UTF8)));
 
+        // ---- YAML path ----
         IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase));
         IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts
             .Select((text, cancellationToken)
@@ -54,15 +57,49 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             }
         });
 
-        // Report SF0012 if no .fluid.yml files found
-        IncrementalValueProvider<bool> hasAnyFiles = context.AdditionalTextsProvider
+        // ---- Grammar-interface path ----
+        IncrementalValuesProvider<INamedTypeSymbol> grammarInterfaces = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "SuperFluid.FluidApiGrammarAttribute",
+                predicate: (node, _) => node is InterfaceDeclarationSyntax,
+                transform: (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol);
+
+        context.RegisterSourceOutput(grammarInterfaces, (spc, grammarSymbol) =>
+        {
+            GrammarInterfaceReader reader = new();
+            FluidApiDefinition definition = reader.Read(grammarSymbol);
+            FluidGeneratorService generatorService = new(new FluidApiDefinitionParser());
+            GenerationResult result = generatorService.Generate(definition, grammarSymbol.ToDisplayString());
+
+            foreach (Diagnostic diagnostic in result.Diagnostics)
+            {
+                spc.ReportDiagnostic(diagnostic);
+            }
+
+            if (result.IsSuccess && result.GeneratedFiles is not null)
+            {
+                foreach (KeyValuePair<string, string> kvp in result.GeneratedFiles)
+                {
+                    spc.AddSource(kvp.Key, SourceText.From(kvp.Value, Encoding.UTF8));
+                }
+            }
+        });
+
+        // ---- SF0012: report when neither YAML files nor grammar interfaces are present ----
+        IncrementalValueProvider<bool> hasAnyYaml = context.AdditionalTextsProvider
             .Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase))
             .Collect()
             .Select((files, _) => files.Length > 0);
 
-        context.RegisterSourceOutput(hasAnyFiles, (spc, hasFiles) =>
+        IncrementalValueProvider<bool> hasAnyGrammarInterface = grammarInterfaces
+            .Collect()
+            .Select((symbols, _) => symbols.Length > 0);
+
+        IncrementalValueProvider<(bool Yaml, bool Grammar)> combined = hasAnyYaml.Combine(hasAnyGrammarInterface);
+
+        context.RegisterSourceOutput(combined, (spc, tuple) =>
         {
-            if (!hasFiles)
+            if (!tuple.Yaml && !tuple.Grammar)
             {
                 spc.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.NoFluidYamlFilesFound,

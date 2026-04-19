@@ -14,17 +14,38 @@ namespace SuperFluid.Internal.Services;
 
 internal class FluidGeneratorService
 {
-	private readonly IDeserializer            _yamlDeserializer;
+	private readonly IDeserializer?           _yamlDeserializer;
 	private readonly FluidApiDefinitionParser _definitionParser;
 
+	/// <summary>Full constructor used by the YAML path — accepts both a deserialiser and a parser.</summary>
 	public FluidGeneratorService(IDeserializer yamlDeserializer, FluidApiDefinitionParser definitionParser)
 	{
 		_yamlDeserializer = yamlDeserializer;
 		_definitionParser = definitionParser;
 	}
 
+	/// <summary>
+	/// Parser-only constructor used by the grammar-interface path, which has no need for YAML
+	/// deserialisation. Calling <see cref="Generate(string,string)"/> on an instance created
+	/// with this constructor will throw <see cref="InvalidOperationException"/>.
+	/// </summary>
+	public FluidGeneratorService(FluidApiDefinitionParser definitionParser)
+	{
+		_yamlDeserializer = null;
+		_definitionParser = definitionParser;
+	}
+
+	/// <summary>
+	/// YAML entry point. Deserialises <paramref name="rawYml"/> and delegates to
+	/// <see cref="Generate(FluidApiDefinition,string)"/> for the shared pipeline.
+	/// </summary>
 	public GenerationResult Generate(string rawYml, string filePath)
 	{
+		if (_yamlDeserializer is null)
+		{
+			throw new InvalidOperationException("This FluidGeneratorService instance was constructed without a YAML deserialiser.");
+		}
+
 		// Validate input
 		if (string.IsNullOrWhiteSpace(rawYml))
 		{
@@ -35,7 +56,7 @@ internal class FluidGeneratorService
 			return GenerationResult.Failure(diagnostic);
 		}
 
-		// Deserialize with error handling
+		// Deserialise with error handling
 		FluidApiDefinition? definition;
 		try
 		{
@@ -60,6 +81,18 @@ internal class FluidGeneratorService
 			return GenerationResult.Failure(diagnostic);
 		}
 
+		return Generate(definition, filePath);
+	}
+
+	/// <summary>
+	/// Shared pipeline entry point. Validates the definition DTO, parses it into the internal model,
+	/// and emits C# interface source code. Used by both the YAML path (via the facade above) and the
+	/// grammar-interface path directly.
+	/// <para><paramref name="source"/> is a display name used in diagnostic messages — typically the
+	/// file path for YAML or the fully-qualified interface name for grammar interfaces.</para>
+	/// </summary>
+	public GenerationResult Generate(FluidApiDefinition definition, string source)
+	{
 		// Check for null/empty required fields first (before validating as identifiers)
 		if (string.IsNullOrWhiteSpace(definition.Name))
 		{
@@ -67,7 +100,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Name",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -77,7 +110,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Namespace",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -87,7 +120,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"InitialState",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -97,7 +130,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Methods",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
