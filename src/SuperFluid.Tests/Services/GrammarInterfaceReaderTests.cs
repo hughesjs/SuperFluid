@@ -31,10 +31,6 @@ namespace SuperFluid
     [AttributeUsage(AttributeTargets.Method)]    public sealed class ReturnTypeAttribute        : Attribute { public ReturnTypeAttribute(Type t) {} }
 }";
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
     /// <summary>
     /// Builds a <see cref="CSharpCompilation"/> that contains the attribute declarations plus
     /// the supplied grammar source, and returns the first interface symbol whose name matches
@@ -74,10 +70,6 @@ namespace SuperFluid
             }
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Tests
-    // -------------------------------------------------------------------------
 
     [Fact]
     public void ReadProducesExpectedNameAndNamespace()

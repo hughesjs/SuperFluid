@@ -44,7 +44,7 @@ internal class GrammarInterfaceReader
 
         string name = DeriveDefinitionName(grammarInterface.Name);
         string namespaceName = grammarInterface.ContainingNamespace.ToDisplayString();
-        string? description = ExtractSummary(grammarInterface.GetDocumentationCommentXml());
+        string description = ExtractSummary(grammarInterface.GetDocumentationCommentXml());
 
         List<IMethodSymbol> methods = grammarInterface.GetMembers()
             .OfType<IMethodSymbol>()
@@ -84,10 +84,6 @@ internal class GrammarInterfaceReader
             StateNames = null
         };
     }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
 
     // Map from fully-qualified BCL type names to C# primitive keywords.
     // This ensures the grammar-interface reader emits the same short keyword types as the YAML path,
@@ -156,7 +152,7 @@ internal class GrammarInterfaceReader
     /// <summary>Converts a single <see cref="IMethodSymbol"/> to its DTO representation.</summary>
     private static FluidApiMethodDefinition ReadMethod(IMethodSymbol method)
     {
-        string? description = ExtractSummary(method.GetDocumentationCommentXml());
+        string description = ExtractSummary(method.GetDocumentationCommentXml());
         List<string> transitions = ReadTransitions(method);
         string? returnType = ReadReturnType(method);
         List<FluidApiArgumentDefinition> arguments = method.Parameters.Select(ReadArgument).ToList();
@@ -439,31 +435,29 @@ internal class GrammarInterfaceReader
     }
 
     /// <summary>
-    /// Extracts the inner text of the first <c>&lt;summary&gt;</c> element from an XML documentation
-    /// comment string. Leading and trailing whitespace-only lines are trimmed; internal line breaks
-    /// are preserved. Returns null when the input is absent or contains no summary.
-    /// </summary>
-    private static string? ExtractSummary(string? xmlDoc)
+    // Extracts the inner text of the first <summary> element from a Roslyn-produced XML doc comment.
+    // Returns "" when there is no summary (or the doc comment itself is absent), so callers can
+    // treat empty as "no description" without a null check.
+    // netstandard2.0 workaround: range-indexer syntax requires newer BCL support, so we use LINQ.
+    private static string ExtractSummary(string? xmlDoc)
     {
         if (string.IsNullOrWhiteSpace(xmlDoc))
         {
-            return null;
+            return "";
         }
 
         try
         {
-            // Roslyn wraps doc comments in a <member> root element — parse that directly
             XDocument doc = XDocument.Parse(xmlDoc!);
             XElement? summaryElement = doc.Descendants("summary").FirstOrDefault();
 
             if (summaryElement is null)
             {
-                return null;
+                return "";
             }
 
             string raw = summaryElement.Value;
 
-            // Split into lines, strip leading/trailing blank lines, preserve internal blank lines
             string[] lines = raw.Split('\n');
             int first = 0;
             int last = lines.Length - 1;
@@ -480,20 +474,18 @@ internal class GrammarInterfaceReader
 
             if (first > last)
             {
-                return null;
+                return "";
             }
 
-            // Trim each line's leading whitespace (Roslyn indents with spaces inside XML elements)
-            // Use LINQ Skip/Take instead of range indexer — netstandard2.0 lacks GetSubArray.
             IEnumerable<string> trimmedLines = lines.Skip(first).Take(last - first + 1).Select(l => l.TrimStart());
             string result = string.Join("\n", trimmedLines).TrimEnd();
 
-            return string.IsNullOrWhiteSpace(result) ? null : result;
+            return result;
         }
         catch (Exception)
         {
-            // If XML parsing fails for any reason, return null rather than throwing
-            return null;
+            // If XML parsing fails for any reason, treat as no description rather than throwing
+            return "";
         }
     }
 }

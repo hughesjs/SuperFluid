@@ -24,7 +24,6 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             ctx.AddSource("SuperFluid.Attributes.g.cs",
                 SourceText.From(AttributeDefinitions.Source, Encoding.UTF8)));
 
-        // ---- YAML path ----
         IncrementalValuesProvider<AdditionalText> extraTexts = context.AdditionalTextsProvider.Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase));
         IncrementalValuesProvider<(string Name, string Content)> namesAndContents = extraTexts
             .Select((text, cancellationToken)
@@ -56,7 +55,6 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             }
         });
 
-        // ---- Grammar-interface path ----
         IncrementalValuesProvider<INamedTypeSymbol> grammarInterfaces = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 "SuperFluid.FluidApiGrammarAttribute",
@@ -114,12 +112,9 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             }
         });
 
-        // ---- SF0017: detect actor name collisions between YAML and grammar-interface declarations ----
-        //
         // Extract actor names from the YAML pipeline by doing a lightweight deserialisation of just
         // the Name field. If deserialisation fails the entry is skipped (SF0001/SF0004 will already
         // have been reported by the main YAML output stage above).
-        //
         // NOTE (V1): when a collision is detected via SF0017, both the YAML and grammar-interface
         // generation paths will still fire and will each attempt to add their output under the same
         // hint name. This will surface as a duplicate-hint build error if left uncorrected. A future
@@ -154,7 +149,6 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             }
         });
 
-        // ---- SF0012: report when neither YAML files nor grammar interfaces are present ----
         IncrementalValueProvider<bool> hasAnyYaml = context.AdditionalTextsProvider
             .Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase))
             .Collect()

@@ -225,10 +225,6 @@ public class FluidGeneratorServiceTests
 		result.Diagnostics[0].Id.ShouldBe("SF0010");
 	}
 
-	// -------------------------------------------------------------------------
-	// Tiered state naming tests
-	// -------------------------------------------------------------------------
-
 	[Fact]
 	public void Tier1NamingProducesShortFormForSmallStates()
 	{
@@ -584,10 +580,6 @@ public class FluidGeneratorServiceTests
 		result.IsSuccess.ShouldBeFalse();
 		result.Diagnostics[0].Id.ShouldBe("SF0016");
 	}
-
-	// -------------------------------------------------------------------------
-	// XML documentation tests
-	// -------------------------------------------------------------------------
 
 	[Fact]
 	public void GenerateEmitsXmlDocOnCompoundInterfaceWhenDescriptionProvided()

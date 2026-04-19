@@ -16,16 +16,13 @@ namespace SuperFluid.Tests.SourceGenerators;
 /// </summary>
 public class GrammarYamlParityTests
 {
-    // -------------------------------------------------------------------------
     // The full car actor grammar expressed as a [FluidApiGrammar] interface.
     // This is the exact semantic equivalent of DemoApiDefinition.fluid.yml.
-    //
     // Notes on argument ordering:
     //   C# requires that optional parameters follow mandatory parameters, so
     //   Start<T,X> declares (int speed, string direction = "Forward", bool hotwire = false).
     //   The parser reorders the YAML's [direction(opt), speed(req), hotwire(opt)] into the
     //   same [speed, direction, hotwire] sequence — so both paths produce identical output.
-    // -------------------------------------------------------------------------
     private const string FullCarActorGrammarSource = """
         using SuperFluid;
         namespace SuperFluid.Tests.Cars
@@ -62,10 +59,6 @@ public class GrammarYamlParityTests
         }
         """;
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
     private static GeneratorDriverRunResult RunGeneratorOverYaml(string yamlContent)
     {
         CSharpCompilation compilation = CompilationHelper.CreateCompilation();
@@ -97,9 +90,7 @@ public class GrammarYamlParityTests
             .ToDictionary(s => s.HintName, s => s.SourceText.ToString());
     }
 
-    // -------------------------------------------------------------------------
     // Parity test
-    // -------------------------------------------------------------------------
 
     [Fact]
     public void GrammarInterfaceDeclarationProducesIdenticalOutputToEquivalentYaml()
@@ -139,9 +130,7 @@ public class GrammarYamlParityTests
         }
     }
 
-    // -------------------------------------------------------------------------
     // SF0017: actor name collision between YAML and grammar-interface declarations
-    // -------------------------------------------------------------------------
 
     [Fact]
     public void CollisionBetweenYamlAndGrammarReportsSF0017()

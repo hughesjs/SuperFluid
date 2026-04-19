@@ -310,17 +310,14 @@ internal class FluidGeneratorService
 		return $"{doc}\tpublic {method.ReturnType ?? model.StateNames[state]} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};";
 	}
 
-	/// <summary>
-	/// Returns a formatted XML documentation block for the given description, with each line prefixed by
-	/// <paramref name="indent"/> and "/// ". Returns an empty string when the description is null or whitespace.
-	/// The returned string ends with a newline so it can be prepended directly before the declaration it documents.
-	/// </summary>
-	private static string FormatXmlDoc(string? description, string indent)
+	// Returns an empty string for whitespace-only descriptions so the caller emits no /// block;
+	// otherwise returns the formatted block with a trailing newline ready to prepend to a declaration.
+	private static string FormatXmlDoc(string description, string indent)
 	{
 		if (string.IsNullOrWhiteSpace(description))
 			return string.Empty;
 
-		string escaped = description!
+		string escaped = description
 			.Replace("&", "&amp;")
 			.Replace("<", "&lt;")
 			.Replace(">", "&gt;");
