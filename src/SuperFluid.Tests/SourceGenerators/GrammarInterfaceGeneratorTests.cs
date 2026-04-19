@@ -242,4 +242,49 @@ namespace Test
             .ToArray();
         generatorFailures.ShouldBeEmpty("Reader exception must be converted to a diagnostic, not escape the generator");
     }
+
+    // -------------------------------------------------------------------------
+    // Test 9: SF0019 reported when grammar interface has multiple [Initial] methods
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void GrammarInterfaceWithMultipleInitialMethodsReportsSF0019()
+    {
+        string grammar = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface IAmbiguousGrammar
+    {
+        [Initial, TransitionsTo(nameof(Go))]
+        void Start();
+
+        [Initial, TransitionsTo(nameof(Go))]
+        void Begin();
+
+        [TransitionsTo]
+        void Go();
+    }
+}";
+
+        CSharpCompilation compilation = CompilationHelper.CreateCompilationWithGrammarSource(grammar);
+        FluidApiSourceGenerator generator = new();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+        driver = driver.RunGenerators(compilation);
+
+        GeneratorDriverRunResult runResult = driver.GetRunResult();
+
+        Diagnostic[] sf0019 = runResult.Results[0].Diagnostics
+            .Where(d => d.Id == "SF0019")
+            .ToArray();
+
+        sf0019.ShouldNotBeEmpty("SF0019 should be reported when multiple methods carry [Initial]");
+        sf0019[0].Severity.ShouldBe(DiagnosticSeverity.Error);
+        string msg = sf0019[0].GetMessage();
+        msg.ShouldContain("IAmbiguousGrammar");
+        msg.ShouldContain("Start");
+        msg.ShouldContain("Begin");
+    }
 }

@@ -393,6 +393,118 @@ namespace Test
     }
 
     [Fact]
+    public void ReadThrowsMultipleInitialMethodsExceptionWhenMoreThanOneInitialPresent()
+    {
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface IAmbiguousGrammar
+    {
+        [Initial, TransitionsTo(nameof(Go))]
+        void Start();
+
+        [Initial, TransitionsTo(nameof(Go))]
+        void Begin();
+
+        [TransitionsTo]
+        void Go();
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.IAmbiguousGrammar");
+        GrammarInterfaceReader reader = new();
+
+        MultipleInitialMethodsException ex = Should.Throw<MultipleInitialMethodsException>(() => reader.Read(symbol));
+        ex.GrammarInterfaceName.ShouldBe("IAmbiguousGrammar");
+        ex.MethodNames.ShouldBe(new[] { "Start", "Begin" });
+    }
+
+    [Fact]
+    public void ReadEmitsTypedLiteralSuffixesForNumericDefaults()
+    {
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface INumericGrammar
+    {
+        [Initial, TransitionsTo(nameof(Process))]
+        void Start();
+
+        [TransitionsTo]
+        void Process(
+            float f = 3.14f,
+            double d = 2.5,
+            decimal m = 9.99m,
+            long big = 5000000000L,
+            ulong huge = 18000000000000000000UL,
+            uint positive = 4000000000U);
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.INumericGrammar");
+        GrammarInterfaceReader reader = new();
+
+        FluidApiDefinition definition = reader.Read(symbol);
+        FluidApiMethodDefinition processMethod = definition.Methods.Single(m => m.Name == "Process");
+
+        // Arguments are reordered defaults-last inside FluidApiMethod; the DTO list here is declaration order
+        string FindDefault(string name) =>
+            processMethod.Arguments.Single(a => a.Name == name).DefaultValue!;
+
+        FindDefault("f").ShouldEndWith("F");
+        FindDefault("d").ShouldEndWith("D");
+        FindDefault("m").ShouldEndWith("M");
+        FindDefault("big").ShouldEndWith("L");
+        FindDefault("huge").ShouldEndWith("UL");
+        FindDefault("positive").ShouldEndWith("U");
+
+        // Spot-check exact values — round-trip format preserves precision
+        FindDefault("m").ShouldBe("9.99M");
+        FindDefault("big").ShouldBe("5000000000L");
+        FindDefault("huge").ShouldBe("18000000000000000000UL");
+        FindDefault("positive").ShouldBe("4000000000U");
+    }
+
+    [Fact]
+    public void ReadResolvesEnumMemberNameForUnsignedLongEnumAboveInt64Max()
+    {
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    public enum BigFlags : ulong
+    {
+        None = 0,
+        HighBit = 9223372036854775808UL  // 2^63, above Int64.MaxValue
+    }
+
+    [FluidApiGrammar]
+    internal interface IEnumGrammar
+    {
+        [Initial, TransitionsTo(nameof(Use))]
+        void Start();
+
+        [TransitionsTo]
+        void Use(BigFlags flag = BigFlags.HighBit);
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.IEnumGrammar");
+        GrammarInterfaceReader reader = new();
+
+        FluidApiDefinition definition = reader.Read(symbol);
+        FluidApiMethodDefinition useMethod = definition.Methods.Single(m => m.Name == "Use");
+        string flagDefault = useMethod.Arguments.Single(a => a.Name == "flag").DefaultValue!;
+
+        flagDefault.ShouldEndWith(".HighBit");
+        flagDefault.ShouldNotContain("9223372036854775808");
+    }
+
+    [Fact]
     public void ReadThrowsMissingInitialMethodExceptionWhenNoInitialMethodPresent()
     {
         string source = @"

@@ -165,4 +165,13 @@ internal static class DiagnosticDescriptors
 		defaultSeverity: DiagnosticSeverity.Error,
 		isEnabledByDefault: true,
 		description: "Every [FluidApiGrammar] interface must designate exactly one method as the initial state using the [Initial] attribute.");
+
+	public static readonly DiagnosticDescriptor MultipleInitialMethods = new(
+		id: "SF0019",
+		title: "Grammar interface has multiple [Initial] methods",
+		messageFormat: "Grammar interface '{0}' declares multiple methods with [Initial]: {1}. Exactly one is required.",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "A [FluidApiGrammar] interface must designate exactly one entry-point method with [Initial]. Multiple decorated methods create an ambiguous state machine.");
 }

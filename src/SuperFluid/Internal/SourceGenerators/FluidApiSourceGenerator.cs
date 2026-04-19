@@ -79,6 +79,15 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
                     ex.GrammarInterfaceName));
                 return;
             }
+            catch (MultipleInitialMethodsException ex)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.MultipleInitialMethods,
+                    Location.None,
+                    ex.GrammarInterfaceName,
+                    string.Join(", ", ex.MethodNames)));
+                return;
+            }
             catch (Exception ex)
             {
                 spc.ReportDiagnostic(Diagnostic.Create(

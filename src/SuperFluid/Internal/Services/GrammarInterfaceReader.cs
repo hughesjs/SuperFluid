@@ -50,12 +50,23 @@ internal class GrammarInterfaceReader
             .OfType<IMethodSymbol>()
             .ToList();
 
-        IMethodSymbol? initialMethodSymbol = methods.FirstOrDefault(m => HasAttribute(m, InitialAttributeName));
+        List<IMethodSymbol> initialMethodSymbols = methods
+            .Where(m => HasAttribute(m, InitialAttributeName))
+            .ToList();
 
-        if (initialMethodSymbol is null)
+        if (initialMethodSymbols.Count == 0)
         {
             throw new MissingInitialMethodException(grammarInterface.Name);
         }
+
+        if (initialMethodSymbols.Count > 1)
+        {
+            throw new MultipleInitialMethodsException(
+                grammarInterface.Name,
+                initialMethodSymbols.Select(m => m.Name).ToList());
+        }
+
+        IMethodSymbol initialMethodSymbol = initialMethodSymbols[0];
 
         FluidApiMethodDefinition initialState = ReadMethod(initialMethodSymbol);
         List<FluidApiMethodDefinition> remainingMethods = methods
@@ -261,34 +272,68 @@ internal class GrammarInterfaceReader
             return "'" + EscapeCharLiteral(charValue) + "'";
         }
 
-        // Enum values — look up the member name via the type symbol
-        if (parameterType.TypeKind == TypeKind.Enum && value is IConvertible convertible)
+        // Enum values — look up the member name via the type symbol. ulong-backed enums with
+        // values above Int64.MaxValue would overflow Int64 conversion, so branch on the
+        // underlying type and use UInt64 in that case.
+        if (parameterType.TypeKind == TypeKind.Enum && value is IConvertible enumValue)
         {
-            try
+            INamedTypeSymbol enumType = (INamedTypeSymbol)parameterType;
+            string? enumMember = ResolveEnumMemberName(enumType, enumValue);
+            if (enumMember is not null)
             {
-                long longVal = convertible.ToInt64(CultureInfo.InvariantCulture);
-                INamedTypeSymbol enumType = (INamedTypeSymbol)parameterType;
-                IFieldSymbol? member = enumType.GetMembers()
+                return enumMember;
+            }
+        }
+
+        // Numeric types need explicit C# literal suffixes — bare IConvertible.ToString drops them,
+        // producing e.g. `float x = 3.14` (CS1750) or `long x = 5000000000` (CS1021). Explicit
+        // suffixes are always safe to emit even when optional (e.g. `42U` compiles the same as `42`).
+        return value switch
+        {
+            float f   => f.ToString("R", CultureInfo.InvariantCulture) + "F",
+            double d  => d.ToString("R", CultureInfo.InvariantCulture) + "D",
+            decimal m => m.ToString(CultureInfo.InvariantCulture) + "M",
+            long l    => l.ToString(CultureInfo.InvariantCulture) + "L",
+            ulong ul  => ul.ToString(CultureInfo.InvariantCulture) + "UL",
+            uint u    => u.ToString(CultureInfo.InvariantCulture) + "U",
+            IConvertible c => c.ToString(CultureInfo.InvariantCulture),
+            _ => value.ToString() ?? "null",
+        };
+    }
+
+    /// <summary>
+    /// Resolves the member name for an enum-typed default value, honouring the enum's underlying
+    /// type (ulong-backed enums can hold values above Int64.MaxValue, which would overflow a
+    /// naive Int64 comparison).
+    /// </summary>
+    private static string? ResolveEnumMemberName(INamedTypeSymbol enumType, IConvertible enumValue)
+    {
+        bool isUnsignedLong = enumType.EnumUnderlyingType?.SpecialType == SpecialType.System_UInt64;
+
+        try
+        {
+            IFieldSymbol? member;
+            if (isUnsignedLong)
+            {
+                ulong target = enumValue.ToUInt64(CultureInfo.InvariantCulture);
+                member = enumType.GetMembers()
                     .OfType<IFieldSymbol>()
-                    .FirstOrDefault(f => f.HasConstantValue && Convert.ToInt64(f.ConstantValue, CultureInfo.InvariantCulture) == longVal);
-
-                if (member is not null)
-                {
-                    return $"global::{enumType.ToDisplayString()}.{member.Name}";
-                }
+                    .FirstOrDefault(f => f.HasConstantValue && Convert.ToUInt64(f.ConstantValue, CultureInfo.InvariantCulture) == target);
             }
-            catch (OverflowException)
+            else
             {
-                // Fall through to generic path
+                long target = enumValue.ToInt64(CultureInfo.InvariantCulture);
+                member = enumType.GetMembers()
+                    .OfType<IFieldSymbol>()
+                    .FirstOrDefault(f => f.HasConstantValue && Convert.ToInt64(f.ConstantValue, CultureInfo.InvariantCulture) == target);
             }
-        }
 
-        if (value is IConvertible convertibleNumeric)
+            return member is null ? null : $"global::{enumType.ToDisplayString()}.{member.Name}";
+        }
+        catch (OverflowException)
         {
-            return convertibleNumeric.ToString(CultureInfo.InvariantCulture);
+            return null;
         }
-
-        return value.ToString() ?? "null";
     }
 
     /// <summary>Escapes special characters inside a string literal value (no surrounding quotes).</summary>
