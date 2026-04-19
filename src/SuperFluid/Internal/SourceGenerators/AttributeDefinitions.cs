@@ -34,5 +34,17 @@ internal static class AttributeDefinitions
 			public ReturnTypeAttribute(Type type) { Type = type; }
 			public Type Type { get; }
 		}
+
+		[AttributeUsage(AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+		public sealed class StateNameAttribute : Attribute
+		{
+			public StateNameAttribute(string name, params string[] transitionMethodNames)
+			{
+				Name = name;
+				TransitionMethodNames = transitionMethodNames;
+			}
+			public string Name { get; }
+			public string[] TransitionMethodNames { get; }
+		}
 		""";
 }

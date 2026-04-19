@@ -1,0 +1,75 @@
+Name: "ICarActor"
+Namespace: "SuperFluid.Examples.Yaml"
+Description: "A car actor demonstrating compile-time-enforced fluent call sequences."
+
+InitialState:
+  Name: "Initialize"
+  Description: "Constructs a new car in its locked state."
+  CanTransitionTo:
+    - "Unlock"
+
+Methods:
+  - Name: "Unlock"
+    Description: "Unlocks the car, allowing the driver to enter or lock it again."
+    CanTransitionTo:
+      - "Lock"
+      - "Enter"
+
+  - Name: "Lock"
+    Description: "Locks the car, returning it to its initial sealed state."
+    CanTransitionTo:
+      - "Unlock"
+
+  - Name: "Enter"
+    Description: "Enters the car, readying it for starting or exit."
+    CanTransitionTo:
+      - "Start"
+      - "Exit"
+
+  - Name: "Exit"
+    Description: "Exits the car, leaving it unlocked but empty."
+    CanTransitionTo:
+      - "Lock"
+      - "Enter"
+
+  - Name: "Start"
+    Description: "Starts the engine. T encodes the ignition-key type; speed is required and direction/hotwire have defaults."
+    # Arguments are deliberately out of order — the parser sorts required-first, defaults-last.
+    Arguments:
+      - Name: "direction"
+        Type: "string"
+        DefaultValue: "\"Forward\"" # Note the escaped quotes — DefaultValue holds a C# code literal.
+      - Name: "speed"
+        Type: "int"
+      - Name: "hotwire"
+        Type: "bool"
+        DefaultValue: "false"
+    GenericArguments:
+      - Name: "T"
+        Constraints:
+          - "notnull"
+    CanTransitionTo:
+      - "Stop"
+      - "Build"
+
+  - Name: "Stop"
+    Description: "Stops the engine, returning to the entered-but-stationary state."
+    CanTransitionTo:
+      - "Start"
+      - "Exit"
+
+  - Name: "Build"
+    Description: "Builds a description of the configured car. Terminal method with an explicit return type."
+    Arguments:
+      - Name: "color"
+        Type: "string"
+    ReturnType: "string"
+    CanTransitionTo: []
+
+# StateNames overrides the auto-generated name for the {Stop, Build} transition set
+# from the default `ICanBuildOrStop` to the domain-meaningful `ICarDriving`.
+StateNames:
+  - Name: "ICarDriving"
+    Transitions:
+      - "Stop"
+      - "Build"

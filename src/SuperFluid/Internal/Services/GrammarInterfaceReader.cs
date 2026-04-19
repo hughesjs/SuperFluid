@@ -21,6 +21,7 @@ internal class GrammarInterfaceReader
     private const string InitialAttributeName = "SuperFluid.InitialAttribute";
     private const string TransitionsToAttributeName = "SuperFluid.TransitionsToAttribute";
     private const string ReturnTypeAttributeName = "SuperFluid.ReturnTypeAttribute";
+    private const string StateNameAttributeName = "SuperFluid.StateNameAttribute";
 
     /// <summary>
     /// Reads the grammar interface symbol and produces a <see cref="FluidApiDefinition"/>.
@@ -72,14 +73,58 @@ internal class GrammarInterfaceReader
             .Select(ReadMethod)
             .ToList();
 
+        List<StateNameDefinition> stateNames = ReadStateNames(grammarInterface);
+
         return new()
         {
             Name = name,
             Namespace = namespaceName,
             Description = description,
             InitialState = initialState,
-            Methods = remainingMethods
+            Methods = remainingMethods,
+            StateNames = stateNames.Count == 0 ? null : stateNames
         };
+    }
+
+    // Pulls every [StateName(name, params string[] transitionMethodNames)] attribute off the grammar
+    // interface and turns it into a StateNameDefinition. Matching the declared transition method
+    // names against synthesised states, and emitting SF0014/SF0015/SF0016 diagnostics for mismatches
+    // or duplicates, is done downstream by StateNamingService — exactly as for the YAML path.
+    private static List<StateNameDefinition> ReadStateNames(INamedTypeSymbol grammarInterface)
+    {
+        List<StateNameDefinition> results = new();
+
+        foreach (AttributeData attr in grammarInterface.GetAttributes())
+        {
+            if (attr.AttributeClass?.ToDisplayString() != StateNameAttributeName)
+            {
+                continue;
+            }
+
+            if (attr.ConstructorArguments.Length < 2)
+            {
+                continue;
+            }
+
+            string? name = attr.ConstructorArguments[0].Value as string;
+            if (name is null)
+            {
+                continue;
+            }
+
+            TypedConstant transitionsArg = attr.ConstructorArguments[1];
+            List<string> transitions = transitionsArg.Kind == TypedConstantKind.Array
+                ? transitionsArg.Values
+                    .Select(v => v.Value as string)
+                    .Where(s => s is not null)
+                    .Select(s => s!)
+                    .ToList()
+                : new();
+
+            results.Add(new() { Name = name, Transitions = transitions });
+        }
+
+        return results;
     }
 
     // Map from fully-qualified BCL type names to C# primitive keywords.

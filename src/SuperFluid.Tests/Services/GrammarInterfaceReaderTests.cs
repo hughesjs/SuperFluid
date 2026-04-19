@@ -29,6 +29,7 @@ namespace SuperFluid
     [AttributeUsage(AttributeTargets.Method)]    public sealed class InitialAttribute          : Attribute {}
     [AttributeUsage(AttributeTargets.Method)]    public sealed class TransitionsToAttribute    : Attribute { public TransitionsToAttribute(params string[] names) {} }
     [AttributeUsage(AttributeTargets.Method)]    public sealed class ReturnTypeAttribute        : Attribute { public ReturnTypeAttribute(Type t) {} }
+    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = true)] public sealed class StateNameAttribute : Attribute { public StateNameAttribute(string name, params string[] transitions) {} }
 }";
 
     /// <summary>
@@ -519,5 +520,77 @@ namespace Test
 
         MissingInitialMethodException ex = Should.Throw<MissingInitialMethodException>(() => reader.Read(symbol));
         ex.GrammarInterfaceName.ShouldBe("IOrphanGrammar");
+    }
+
+    [Fact]
+    public void ReadExtractsStateNameAttributesAsStateNameDefinitions()
+    {
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    [StateName(""ICarDriving"", nameof(ICarActorGrammar.Stop), nameof(ICarActorGrammar.Build))]
+    [StateName(""ICarParked"", nameof(ICarActorGrammar.Unlock))]
+    internal interface ICarActorGrammar
+    {
+        [Initial, TransitionsTo(nameof(Unlock))]
+        void Initialize();
+
+        [TransitionsTo(nameof(Stop), nameof(Build))]
+        void Start();
+
+        [TransitionsTo]
+        void Unlock();
+
+        [TransitionsTo]
+        void Stop();
+
+        [TransitionsTo]
+        void Build();
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.ICarActorGrammar");
+        GrammarInterfaceReader reader = new();
+
+        FluidApiDefinition definition = reader.Read(symbol);
+
+        definition.StateNames.ShouldNotBeNull();
+        definition.StateNames!.Count.ShouldBe(2);
+
+        StateNameDefinition drivingEntry = definition.StateNames[0];
+        drivingEntry.Name.ShouldBe("ICarDriving");
+        drivingEntry.Transitions.ShouldBe(new[] { "Stop", "Build" });
+
+        StateNameDefinition parkedEntry = definition.StateNames[1];
+        parkedEntry.Name.ShouldBe("ICarParked");
+        parkedEntry.Transitions.ShouldBe(new[] { "Unlock" });
+    }
+
+    [Fact]
+    public void ReadReturnsNullStateNamesWhenNoStateNameAttributesPresent()
+    {
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface IPlainGrammar
+    {
+        [Initial, TransitionsTo(nameof(Go))]
+        void Start();
+
+        [TransitionsTo]
+        void Go();
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.IPlainGrammar");
+        GrammarInterfaceReader reader = new();
+
+        FluidApiDefinition definition = reader.Read(symbol);
+
+        definition.StateNames.ShouldBeNull();
     }
 }
