@@ -9,29 +9,22 @@ using SuperFluid.Internal.Parsers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace SuperFluid.Internal.Services;
 
 internal class FluidGeneratorService
 {
-	private readonly IDeserializer?           _yamlDeserializer;
+	// The deserialiser is immutable after construction and carries no per-compilation state,
+	// so a single shared instance is safe and avoids per-invocation allocations.
+	private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
+		.WithNamingConvention(NullNamingConvention.Instance)
+		.Build();
+
 	private readonly FluidApiDefinitionParser _definitionParser;
 
-	/// <summary>Full constructor used by the YAML path — accepts both a deserialiser and a parser.</summary>
-	public FluidGeneratorService(IDeserializer yamlDeserializer, FluidApiDefinitionParser definitionParser)
-	{
-		_yamlDeserializer = yamlDeserializer;
-		_definitionParser = definitionParser;
-	}
-
-	/// <summary>
-	/// Parser-only constructor used by the grammar-interface path, which has no need for YAML
-	/// deserialisation. Calling <see cref="Generate(string,string)"/> on an instance created
-	/// with this constructor will throw <see cref="InvalidOperationException"/>.
-	/// </summary>
 	public FluidGeneratorService(FluidApiDefinitionParser definitionParser)
 	{
-		_yamlDeserializer = null;
 		_definitionParser = definitionParser;
 	}
 
@@ -41,11 +34,6 @@ internal class FluidGeneratorService
 	/// </summary>
 	public GenerationResult Generate(string rawYml, string filePath)
 	{
-		if (_yamlDeserializer is null)
-		{
-			throw new InvalidOperationException("This FluidGeneratorService instance was constructed without a YAML deserialiser.");
-		}
-
 		// Validate input
 		if (string.IsNullOrWhiteSpace(rawYml))
 		{
@@ -60,7 +48,7 @@ internal class FluidGeneratorService
 		FluidApiDefinition? definition;
 		try
 		{
-			definition = _yamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
+			definition = YamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
 		}
 		catch (YamlDotNet.Core.YamlException ex)
 		{
@@ -155,20 +143,17 @@ internal class FluidGeneratorService
 			return GenerationResult.Failure(diagnostic);
 		}
 
-		// Validate method names
-		if (definition.Methods != null)
+		// Validate method names (definition.Methods is already non-null by the guard above)
+		foreach (FluidApiMethodDefinition method in definition.Methods)
 		{
-			foreach (FluidApiMethodDefinition method in definition.Methods)
+			if (!SyntaxFacts.IsValidIdentifier(method.Name))
 			{
-				if (!SyntaxFacts.IsValidIdentifier(method.Name))
-				{
-					Diagnostic diagnostic = Diagnostic.Create(
-						DiagnosticDescriptors.InvalidCSharpIdentifier,
-						Location.None,
-						method.Name,
-						$"Method name");
-					return GenerationResult.Failure(diagnostic);
-				}
+				Diagnostic diagnostic = Diagnostic.Create(
+					DiagnosticDescriptors.InvalidCSharpIdentifier,
+					Location.None,
+					method.Name,
+					"Method name");
+				return GenerationResult.Failure(diagnostic);
 			}
 		}
 

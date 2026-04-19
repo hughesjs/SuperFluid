@@ -89,9 +89,11 @@ public class GrammarInterfaceGeneratorTests
 
         ImmutableArray<GeneratedSourceResult> sources = runResult.Results[0].GeneratedSources;
 
-        // The two-method grammar produces at least one state interface (e.g. ICanUnlock.fluid.g.cs)
-        sources.ShouldContain(s => s.HintName.EndsWith(".fluid.g.cs") && s.HintName != "ICarActor.fluid.g.cs",
-            "Expected at least one state interface .fluid.g.cs to be generated");
+        // Initialize transitions to Unlock, so the generator emits a state interface named ICanUnlock.
+        // Asserting the specific name (not just "something ending in .fluid.g.cs") catches regressions
+        // where state-interface naming drifts or the state graph is mis-synthesised.
+        GeneratedSourceResult stateInterface = sources.Single(s => s.HintName == "ICanUnlock.fluid.g.cs");
+        stateInterface.SourceText.ToString().ShouldContain("public interface ICanUnlock");
     }
 
     // -------------------------------------------------------------------------

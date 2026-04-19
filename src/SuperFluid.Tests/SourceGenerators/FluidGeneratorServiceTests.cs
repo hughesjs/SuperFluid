@@ -1,22 +1,12 @@
 using SuperFluid.Internal.Parsers;
 using SuperFluid.Internal.Services;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace SuperFluid.Tests.SourceGenerators;
 
 public class FluidGeneratorServiceTests
 {
-	private readonly FluidGeneratorService _sut;
+	private readonly FluidGeneratorService _sut = new(new FluidApiDefinitionParser());
 	private readonly string _rawYml = File.ReadAllText("DemoApiDefinition.fluid.yml");
-
-	public FluidGeneratorServiceTests()
-	{
-		IDeserializer deserializer = new DeserializerBuilder()
-			.WithNamingConvention(NullNamingConvention.Instance)
-			.Build();
-		_sut = new FluidGeneratorService(deserializer, new FluidApiDefinitionParser());
-	}
 
 	[Fact]
 	public void GenerateReturnsSuccessForValidYaml()

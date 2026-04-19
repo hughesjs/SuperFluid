@@ -34,10 +34,7 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
         {
-            IDeserializer deserializer = new DeserializerBuilder()
-                .WithNamingConvention(NullNamingConvention.Instance)
-                .Build();
-            FluidGeneratorService generatorService = new(deserializer, new FluidApiDefinitionParser());
+            FluidGeneratorService generatorService = new(new FluidApiDefinitionParser());
 
             GenerationResult result = generatorService.Generate(
                 nameAndContent.Content,
@@ -91,8 +88,8 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
                 return;
             }
 
-            FluidGeneratorService generatorService = new(new FluidApiDefinitionParser());
-            GenerationResult result = generatorService.Generate(definition, grammarSymbol.ToDisplayString());
+            FluidGeneratorService grammarService = new(new FluidApiDefinitionParser());
+            GenerationResult result = grammarService.Generate(definition, grammarSymbol.ToDisplayString());
 
             foreach (Diagnostic diagnostic in result.Diagnostics)
             {
@@ -171,6 +168,14 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
         });
     }
 
+    // Dedicated deserialiser for the SF0017 actor-name sniff: IgnoreUnmatchedProperties lets us
+    // read only the Name field without binding the rest of the document. Shared across invocations
+    // because deserialiser instances are immutable after construction.
+    private static readonly IDeserializer ActorNameDeserialiser = new DeserializerBuilder()
+        .WithNamingConvention(NullNamingConvention.Instance)
+        .IgnoreUnmatchedProperties()
+        .Build();
+
     /// <summary>
     /// Performs a lightweight deserialisation of YAML content to extract just the actor name (the
     /// <c>Name</c> field at the root level). Returns <c>null</c> if the content is empty or cannot
@@ -185,13 +190,7 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 
         try
         {
-            IDeserializer deserializer = new DeserializerBuilder()
-                .WithNamingConvention(NullNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build();
-
-            // Deserialise into a minimal stub that only captures the Name field
-            YamlNameStub? stub = deserializer.Deserialize<YamlNameStub>(yamlContent);
+            YamlNameStub? stub = ActorNameDeserialiser.Deserialize<YamlNameStub>(yamlContent);
             return stub?.Name;
         }
         catch

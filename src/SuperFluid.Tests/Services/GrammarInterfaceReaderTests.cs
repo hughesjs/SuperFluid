@@ -355,9 +355,8 @@ namespace Test
         FluidApiMethodDefinition? buildMethod = definition.Methods.FirstOrDefault(m => m.Name == "Build");
         buildMethod.ShouldNotBeNull();
 
-        // The fully-qualified display string for System.String
-        buildMethod!.ReturnType.ShouldNotBeNull();
-        buildMethod.ReturnType!.ShouldContain("string");
+        // Primitive keyword mapping produces the C# keyword form, not the global:: alias
+        buildMethod!.ReturnType.ShouldBe("string");
     }
 
     [Fact]
