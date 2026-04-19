@@ -147,4 +147,13 @@ internal static class DiagnosticDescriptors
 		defaultSeverity: DiagnosticSeverity.Error,
 		isEnabledByDefault: true,
 		description: "Two or more StateNames entries resolve to the same synthesised state. Remove or correct the duplicate entries.");
+
+	public static readonly DiagnosticDescriptor DuplicateActorDeclaration = new(
+		id: "SF0017",
+		title: "Duplicate actor declaration",
+		messageFormat: "Actor '{0}' is declared in both a .fluid.yml file and a [FluidApiGrammar] interface. Use only one declaration per actor name.",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "An actor must be declared in exactly one place. Remove either the YAML file or the grammar interface.");
 }

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -85,6 +86,46 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             }
         });
 
+        // ---- SF0017: detect actor name collisions between YAML and grammar-interface declarations ----
+        //
+        // Extract actor names from the YAML pipeline by doing a lightweight deserialisation of just
+        // the Name field. If deserialisation fails the entry is skipped (SF0001/SF0004 will already
+        // have been reported by the main YAML output stage above).
+        //
+        // NOTE (V1): when a collision is detected via SF0017, both the YAML and grammar-interface
+        // generation paths will still fire and will each attempt to add their output under the same
+        // hint name. This will surface as a duplicate-hint build error if left uncorrected. A future
+        // improvement could suppress emission on detected collision, but SF0017 is sufficient for V1.
+        IncrementalValueProvider<ImmutableArray<string>> yamlActorNames = namesAndContents
+            .Select((nameAndContent, _) => ExtractYamlActorName(nameAndContent.Content))
+            .Where(name => name is not null)
+            .Select((name, _) => name!)
+            .Collect();
+
+        IncrementalValueProvider<ImmutableArray<string>> grammarActorNames = grammarInterfaces
+            .Select((sym, _) => GrammarInterfaceReader.DeriveActorName(sym.Name))
+            .Collect();
+
+        IncrementalValueProvider<(ImmutableArray<string> YamlNames, ImmutableArray<string> GrammarNames)> collisionInput =
+            yamlActorNames.Combine(grammarActorNames);
+
+        context.RegisterSourceOutput(collisionInput, (spc, pair) =>
+        {
+            // Use a HashSet for O(1) lookup of YAML actor names
+            System.Collections.Generic.HashSet<string> yamlSet = new(pair.YamlNames, StringComparer.Ordinal);
+
+            foreach (string grammarName in pair.GrammarNames)
+            {
+                if (yamlSet.Contains(grammarName))
+                {
+                    spc.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.DuplicateActorDeclaration,
+                        Location.None,
+                        grammarName));
+                }
+            }
+        });
+
         // ---- SF0012: report when neither YAML files nor grammar interfaces are present ----
         IncrementalValueProvider<bool> hasAnyYaml = context.AdditionalTextsProvider
             .Where(f => f.Path.EndsWith(".fluid.yml", StringComparison.OrdinalIgnoreCase))
@@ -106,5 +147,41 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
                     Location.None));
             }
         });
+    }
+
+    /// <summary>
+    /// Performs a lightweight deserialisation of YAML content to extract just the actor name (the
+    /// <c>Name</c> field at the root level). Returns <c>null</c> if the content is empty or cannot
+    /// be deserialised — in those cases the main YAML pipeline will already report SF0001/SF0004.
+    /// </summary>
+    private static string? ExtractYamlActorName(string yamlContent)
+    {
+        if (string.IsNullOrWhiteSpace(yamlContent))
+        {
+            return null;
+        }
+
+        try
+        {
+            IDeserializer deserializer = new DeserializerBuilder()
+                .WithNamingConvention(NullNamingConvention.Instance)
+                .IgnoreUnmatchedProperties()
+                .Build();
+
+            // Deserialise into a minimal stub that only captures the Name field
+            YamlNameStub? stub = deserializer.Deserialize<YamlNameStub>(yamlContent);
+            return stub?.Name;
+        }
+        catch
+        {
+            // Deserialisation failure is handled by the main YAML pipeline — skip here
+            return null;
+        }
+    }
+
+    /// <summary>Minimal YAML stub used by <see cref="ExtractYamlActorName"/> to read just the actor name.</summary>
+    private sealed class YamlNameStub
+    {
+        public string? Name { get; set; }
     }
 }

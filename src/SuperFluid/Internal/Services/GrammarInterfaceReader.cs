@@ -77,6 +77,59 @@ internal class GrammarInterfaceReader
     // Private helpers
     // -------------------------------------------------------------------------
 
+    // Map from fully-qualified BCL type names to C# primitive keywords.
+    // This ensures the grammar-interface reader emits the same short keyword types as the YAML path,
+    // which stores type names as plain strings such as "int", "string", "bool".
+    private static readonly Dictionary<string, string> PrimitiveKeywords = new(StringComparer.Ordinal)
+    {
+        ["global::System.Boolean"]  = "bool",
+        ["global::System.Byte"]     = "byte",
+        ["global::System.SByte"]    = "sbyte",
+        ["global::System.Int16"]    = "short",
+        ["global::System.UInt16"]   = "ushort",
+        ["global::System.Int32"]    = "int",
+        ["global::System.UInt32"]   = "uint",
+        ["global::System.Int64"]    = "long",
+        ["global::System.UInt64"]   = "ulong",
+        ["global::System.Single"]   = "float",
+        ["global::System.Double"]   = "double",
+        ["global::System.Decimal"]  = "decimal",
+        ["global::System.Char"]     = "char",
+        ["global::System.String"]   = "string",
+        ["global::System.Object"]   = "object"
+    };
+
+    /// <summary>
+    /// Returns the C# primitive keyword for well-known BCL types (e.g. <c>int</c> for
+    /// <c>System.Int32</c>); for all other types, returns the fully-qualified name stripped of the
+    /// <c>global::</c> prefix (e.g. <c>INumber</c> for a top-level interface, or
+    /// <c>System.Collections.Generic.List&lt;T&gt;</c> for a BCL generic type).
+    /// This keeps generated code consistent with the YAML path, which stores type names as plain
+    /// strings without the Roslyn global alias prefix.
+    /// </summary>
+    private static string ToTypeString(ITypeSymbol type)
+    {
+        string fullyQualified = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        if (PrimitiveKeywords.TryGetValue(fullyQualified, out string? keyword))
+        {
+            return keyword;
+        }
+
+        // Strip the "global::" alias prefix that Roslyn adds to fully-qualified names.
+        // The resulting string is still unambiguous in generated C# source files.
+        const string GlobalPrefix = "global::";
+        return fullyQualified.StartsWith(GlobalPrefix, StringComparison.Ordinal)
+            ? fullyQualified.Substring(GlobalPrefix.Length)
+            : fullyQualified;
+    }
+
+    /// <summary>
+    /// Strips the "Grammar" suffix from an interface name if present, yielding the actor name.
+    /// Exposed as internal so the source generator can reuse the same logic when building
+    /// the collision-detection pipeline without re-instantiating a reader.
+    /// </summary>
+    internal static string DeriveActorName(string interfaceName) => DeriveDefinitionName(interfaceName);
+
     /// <summary>Strips the "Grammar" suffix from the interface name if present.</summary>
     private static string DeriveDefinitionName(string interfaceName)
     {
@@ -156,7 +209,7 @@ internal class GrammarInterfaceReader
         TypedConstant arg = attr.ConstructorArguments[0];
         if (arg.Value is INamedTypeSymbol typeSymbol)
         {
-            return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return ToTypeString(typeSymbol);
         }
 
         return null;
@@ -165,7 +218,7 @@ internal class GrammarInterfaceReader
     /// <summary>Converts an <see cref="IParameterSymbol"/> to its DTO representation.</summary>
     private static FluidApiArgumentDefinition ReadArgument(IParameterSymbol parameter)
     {
-        string type = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        string type = ToTypeString(parameter.Type);
         string? defaultValue = null;
 
         if (parameter.HasExplicitDefaultValue)
@@ -315,7 +368,7 @@ internal class GrammarInterfaceReader
         // Type constraints follow
         foreach (ITypeSymbol constraintType in typeParam.ConstraintTypes)
         {
-            constraints.Add(constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            constraints.Add(ToTypeString(constraintType));
         }
 
         // Constructor constraint is always last per C# syntax rules
