@@ -78,8 +78,7 @@ internal class GrammarInterfaceReader
             Namespace = namespaceName,
             Description = description,
             InitialState = initialState,
-            Methods = remainingMethods,
-            StateNames = null
+            Methods = remainingMethods
         };
     }
 
@@ -308,7 +307,6 @@ internal class GrammarInterfaceReader
         return method.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == fullyQualifiedAttributeName);
     }
 
-    /// <summary>
     // Extracts the inner text of the first <summary> element from a Roslyn-produced XML doc comment.
     // Returns "" when there is no summary (or the doc comment itself is absent), so callers can
     // treat empty as "no description" without a null check.

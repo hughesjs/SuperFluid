@@ -88,10 +88,14 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
             }
             catch (Exception ex)
             {
+                // Include the full ToString (with stack trace) rather than just ex.Message so
+                // unexpected Roslyn-symbol edge cases surface enough detail to be debugged from
+                // the diagnostic output alone. SF0011 is an error-severity catch-all so the
+                // verbosity is appropriate.
                 spc.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.UnexpectedGenerationError,
                     Location.None,
-                    ex.Message));
+                    ex.ToString()));
                 return;
             }
 

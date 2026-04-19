@@ -25,7 +25,7 @@ internal record FluidApiMethod
 
     internal string? ReturnType { get; init; }
 
-    internal string Description { get; init; } = "";
+    internal string Description { get; init; }
     internal HashSet<FluidApiMethod> CanTransitionTo { get; init; } = [];
 
     internal ImmutableArray<FluidApiArgument> Arguments { get; init; } = [];
