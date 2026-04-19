@@ -108,6 +108,15 @@ Install-Package SuperFluid
 
 ## Defining Your Grammar
 
+SuperFluid supports two ways to declare a grammar. Both feed the same downstream pipeline and produce byte-identical generated code for equivalent declarations — pick whichever fits your workflow.
+
+- **YAML** (`.fluid.yml` file registered as `<AdditionalFiles>`) — grammar lives outside C# source. Good for non-developers co-authoring the grammar, or when you want the state machine visible as a data file.
+- **C# attributes** (`[FluidApiGrammar]` on an interface) — grammar lives in C# alongside your implementation. Rename refactors propagate via `nameof(...)`, and the IDE resolves transition targets to real method symbols.
+
+See the [Examples](#examples) section for both approaches side-by-side.
+
+### YAML
+
 > [!WARNING]
 > Your grammar file needs to end with `.fluid.yml` to be picked up by SuperFluid.
 
@@ -216,6 +225,76 @@ Methods:
     CanTransitionTo: []
     ReturnType: "string"
 ```
+
+### C# attributes
+
+You can also declare the grammar directly in C# as an interface decorated with `[FluidApiGrammar]`. The interface itself is a declaration vehicle — nothing implements it; the generator reads it via Roslyn's symbol model and emits the same `ICarActor` + state-interface hierarchy that the YAML path produces.
+
+Four attributes are emitted by the generator into every consuming compilation, so you never need an extra package reference:
+
+| Attribute | Applies to | Purpose |
+|-----------|-----------|---------|
+| `[FluidApiGrammar]` | interface | Marks the interface as a grammar declaration. The generator strips a trailing `Grammar` suffix from the interface name to derive the actor name (e.g. `ICarActorGrammar` → `ICarActor`). |
+| `[Initial]` | method | Designates exactly one method as the initial entry point. |
+| `[TransitionsTo(params string[] methodNames)]` | method | Lists valid next methods. Use `nameof(...)` for rename-safe references. |
+| `[ReturnType(Type type)]` | method | Optional explicit return type for terminal methods (e.g. a `Build()` that returns `string`). |
+| `[StateName(string name, params string[] transitionMethodNames)]` | interface | Optional override for the auto-generated state interface name. Multiple allowed. |
+
+Method signatures use native C# — arguments with defaults, generic parameters with constraints, and XML `///` doc comments all flow through unchanged:
+
+```csharp
+using SuperFluid;
+
+/// <summary>A car actor demonstrating compile-time-enforced fluent call sequences.</summary>
+[FluidApiGrammar]
+[StateName("ICarDriving", nameof(ICarActorGrammar.Stop), nameof(ICarActorGrammar.Build))]
+internal interface ICarActorGrammar
+{
+    /// <summary>Constructs a new car in its locked state.</summary>
+    [Initial, TransitionsTo(nameof(Unlock))]
+    void Initialize();
+
+    /// <summary>Unlocks the car, allowing the driver to enter or lock it again.</summary>
+    [TransitionsTo(nameof(Lock), nameof(Enter))]
+    void Unlock();
+
+    // …other methods…
+
+    /// <summary>Starts the engine.</summary>
+    [TransitionsTo(nameof(Stop), nameof(Build))]
+    void Start<T>(int speed, string direction = "Forward", bool hotwire = false) where T : notnull;
+
+    /// <summary>Terminal method with an explicit return type.</summary>
+    [TransitionsTo, ReturnType(typeof(string))]
+    void Build(string color);
+}
+```
+
+For XML doc comments to flow through, set `<GenerateDocumentationFile>true</GenerateDocumentationFile>` in the consuming csproj (the `ISymbol.GetDocumentationCommentXml()` Roslyn API requires it).
+
+## Examples
+
+Two example projects in [`src/Examples/`](src/Examples/) declare the same state machine two different ways:
+
+- **[`SuperFluid.Example.Yaml/`](src/Examples/SuperFluid.Example.Yaml/)** — declares the grammar in [`CarActor.fluid.yml`](src/Examples/SuperFluid.Example.Yaml/CarActor.fluid.yml) registered as `<AdditionalFiles>`.
+- **[`SuperFluid.Example.Attributes/`](src/Examples/SuperFluid.Example.Attributes/)** — declares the same grammar as [`ICarActorGrammar`](src/Examples/SuperFluid.Example.Attributes/ICarActorGrammar.cs) with `[FluidApiGrammar]` and sibling attributes.
+
+Both produce the same generated state interfaces (`ICanUnlock`, `ICanEnterOrLock`, `ICanExitOrStart`, `ICarDriving`, `ICarActor`) and run the same `Program.cs`:
+
+```csharp
+string description = Car.Initialize()
+    .Unlock()
+    .Enter()
+    .Start<int>(speed: 30)
+    .Build("red");
+
+Console.WriteLine(description);
+// Built a red car going Forward at 30 mph
+```
+
+Each demo has `<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>` so the generator's output lands at `obj/Debug/net10.0/generated/…/*.fluid.g.cs` — browse those files to see what SuperFluid emits for each grammar.
+
+Try uncommenting one of the "won't compile" lines at the bottom of either `Program.cs` to see the compile-time state-machine enforcement in action.
 
 ## Error Reporting
 

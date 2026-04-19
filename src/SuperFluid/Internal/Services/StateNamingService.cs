@@ -37,7 +37,6 @@ internal static class StateNamingService
 		List<string>                      unmatchedWarnings = new();
 		HashSet<FluidApiState>            userNamedStates   = new();
 
-		// --- Tier 4: user overrides ---
 		if (definition.StateNames is { Count: > 0 })
 		{
 			// Build a lookup from transition-set → FluidApiState using the existing comparer
@@ -78,14 +77,11 @@ internal static class StateNamingService
 			}
 		}
 
-		// --- Auto-tier: only states not already named by user ---
 		List<FluidApiState> unnamedStates = states.FindAll(s => !userNamedStates.Contains(s));
 		AssignAutoNames(unnamedStates, definition, names);
 
 		return (names, unmatchedWarnings);
 	}
-
-	// -------------------------------------------------------------------------
 
 	private static void AssignAutoNames(
 		List<FluidApiState>               states,
@@ -155,8 +151,6 @@ internal static class StateNamingService
 			}
 		}
 	}
-
-	// -------------------------------------------------------------------------
 
 	private static string ComputeTier1Name(FluidApiState state)
 	{
@@ -240,8 +234,6 @@ internal static class StateNamingService
 
 		return name;
 	}
-
-	// -------------------------------------------------------------------------
 
 	/// <summary>
 	/// Builds a map from transition-set → <see cref="FluidApiState"/> for all supplied states.

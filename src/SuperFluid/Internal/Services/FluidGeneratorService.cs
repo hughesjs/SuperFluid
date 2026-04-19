@@ -9,20 +9,29 @@ using SuperFluid.Internal.Parsers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace SuperFluid.Internal.Services;
 
 internal class FluidGeneratorService
 {
-	private readonly IDeserializer            _yamlDeserializer;
+	// The deserialiser is immutable after construction and carries no per-compilation state,
+	// so a single shared instance is safe and avoids per-invocation allocations.
+	private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
+		.WithNamingConvention(NullNamingConvention.Instance)
+		.Build();
+
 	private readonly FluidApiDefinitionParser _definitionParser;
 
-	public FluidGeneratorService(IDeserializer yamlDeserializer, FluidApiDefinitionParser definitionParser)
+	public FluidGeneratorService(FluidApiDefinitionParser definitionParser)
 	{
-		_yamlDeserializer = yamlDeserializer;
 		_definitionParser = definitionParser;
 	}
 
+	/// <summary>
+	/// YAML entry point. Deserialises <paramref name="rawYml"/> and delegates to
+	/// <see cref="Generate(FluidApiDefinition,string)"/> for the shared pipeline.
+	/// </summary>
 	public GenerationResult Generate(string rawYml, string filePath)
 	{
 		// Validate input
@@ -35,11 +44,11 @@ internal class FluidGeneratorService
 			return GenerationResult.Failure(diagnostic);
 		}
 
-		// Deserialize with error handling
+		// Deserialise with error handling
 		FluidApiDefinition? definition;
 		try
 		{
-			definition = _yamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
+			definition = YamlDeserializer.Deserialize<FluidApiDefinition>(rawYml);
 		}
 		catch (YamlDotNet.Core.YamlException ex)
 		{
@@ -60,6 +69,18 @@ internal class FluidGeneratorService
 			return GenerationResult.Failure(diagnostic);
 		}
 
+		return Generate(definition, filePath);
+	}
+
+	/// <summary>
+	/// Shared pipeline entry point. Validates the definition DTO, parses it into the internal model,
+	/// and emits C# interface source code. Used by both the YAML path (via the facade above) and the
+	/// grammar-interface path directly.
+	/// <para><paramref name="source"/> is a display name used in diagnostic messages — typically the
+	/// file path for YAML or the fully-qualified interface name for grammar interfaces.</para>
+	/// </summary>
+	public GenerationResult Generate(FluidApiDefinition definition, string source)
+	{
 		// Check for null/empty required fields first (before validating as identifiers)
 		if (string.IsNullOrWhiteSpace(definition.Name))
 		{
@@ -67,7 +88,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Name",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -77,7 +98,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Namespace",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -87,7 +108,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"InitialState",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -97,7 +118,7 @@ internal class FluidGeneratorService
 				DiagnosticDescriptors.MissingRequiredField,
 				Location.None,
 				"Methods",
-				filePath);
+				source);
 			return GenerationResult.Failure(diagnostic);
 		}
 
@@ -122,20 +143,17 @@ internal class FluidGeneratorService
 			return GenerationResult.Failure(diagnostic);
 		}
 
-		// Validate method names
-		if (definition.Methods != null)
+		// Validate method names (definition.Methods is already non-null by the guard above)
+		foreach (FluidApiMethodDefinition method in definition.Methods)
 		{
-			foreach (FluidApiMethodDefinition method in definition.Methods)
+			if (!SyntaxFacts.IsValidIdentifier(method.Name))
 			{
-				if (!SyntaxFacts.IsValidIdentifier(method.Name))
-				{
-					Diagnostic diagnostic = Diagnostic.Create(
-						DiagnosticDescriptors.InvalidCSharpIdentifier,
-						Location.None,
-						method.Name,
-						$"Method name");
-					return GenerationResult.Failure(diagnostic);
-				}
+				Diagnostic diagnostic = Diagnostic.Create(
+					DiagnosticDescriptors.InvalidCSharpIdentifier,
+					Location.None,
+					method.Name,
+					"Method name");
+				return GenerationResult.Failure(diagnostic);
 			}
 		}
 
@@ -292,17 +310,14 @@ internal class FluidGeneratorService
 		return $"{doc}\tpublic {method.ReturnType ?? model.StateNames[state]} {method.Name}{genericArgs}({string.Join(", ", method.Arguments.Select(GenerateMethodArgsSource))}){constraints};";
 	}
 
-	/// <summary>
-	/// Returns a formatted XML documentation block for the given description, with each line prefixed by
-	/// <paramref name="indent"/> and "/// ". Returns an empty string when the description is null or whitespace.
-	/// The returned string ends with a newline so it can be prepended directly before the declaration it documents.
-	/// </summary>
-	private static string FormatXmlDoc(string? description, string indent)
+	// Returns an empty string for whitespace-only descriptions so the caller emits no /// block;
+	// otherwise returns the formatted block with a trailing newline ready to prepend to a declaration.
+	private static string FormatXmlDoc(string description, string indent)
 	{
 		if (string.IsNullOrWhiteSpace(description))
 			return string.Empty;
 
-		string escaped = description!
+		string escaped = description
 			.Replace("&", "&amp;")
 			.Replace("<", "&lt;")
 			.Replace(">", "&gt;");

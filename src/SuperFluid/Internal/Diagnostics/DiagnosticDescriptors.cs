@@ -105,12 +105,12 @@ internal static class DiagnosticDescriptors
 	// Info/Warnings
 	public static readonly DiagnosticDescriptor NoFluidYamlFilesFound = new(
 		id: "SF0012",
-		title: "No .fluid.yml files found",
-		messageFormat: "No .fluid.yml files found in AdditionalFiles",
+		title: "No grammar sources found",
+		messageFormat: "No grammar sources found (no .fluid.yml files in AdditionalFiles and no [FluidApiGrammar] interfaces)",
 		category: Category,
 		defaultSeverity: DiagnosticSeverity.Info,
 		isEnabledByDefault: true,
-		description: "Ensure .fluid.yml files are marked as AdditionalFiles in your .csproj.");
+		description: "Ensure .fluid.yml files are marked as AdditionalFiles in your .csproj, or declare an interface decorated with [FluidApiGrammar].");
 
 	public static readonly DiagnosticDescriptor UnusedMethod = new(
 		id: "SF0013",
@@ -147,4 +147,31 @@ internal static class DiagnosticDescriptors
 		defaultSeverity: DiagnosticSeverity.Error,
 		isEnabledByDefault: true,
 		description: "Two or more StateNames entries resolve to the same synthesised state. Remove or correct the duplicate entries.");
+
+	public static readonly DiagnosticDescriptor DuplicateActorDeclaration = new(
+		id: "SF0017",
+		title: "Duplicate actor declaration",
+		messageFormat: "Actor '{0}' is declared in both a .fluid.yml file and a [FluidApiGrammar] interface. Use only one declaration per actor name.",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "An actor must be declared in exactly one place. Remove either the YAML file or the grammar interface.");
+
+	public static readonly DiagnosticDescriptor MissingInitialMethod = new(
+		id: "SF0018",
+		title: "Grammar interface missing [Initial] method",
+		messageFormat: "Grammar interface '{0}' has no method decorated with [Initial]. Mark the entry-point method with [Initial].",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "Every [FluidApiGrammar] interface must designate exactly one method as the initial state using the [Initial] attribute.");
+
+	public static readonly DiagnosticDescriptor MultipleInitialMethods = new(
+		id: "SF0019",
+		title: "Grammar interface has multiple [Initial] methods",
+		messageFormat: "Grammar interface '{0}' declares multiple methods with [Initial]: {1}. Exactly one is required.",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "A [FluidApiGrammar] interface must designate exactly one entry-point method with [Initial]. Multiple decorated methods create an ambiguous state machine.");
 }
