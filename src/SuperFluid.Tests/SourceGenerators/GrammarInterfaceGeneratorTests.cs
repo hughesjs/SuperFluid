@@ -194,4 +194,50 @@ public class GrammarInterfaceGeneratorTests
         sf0012.ShouldNotBeEmpty("SF0012 should be reported when no grammar sources are found");
         sf0012[0].Severity.ShouldBe(DiagnosticSeverity.Info);
     }
+
+    // -------------------------------------------------------------------------
+    // Test 8: SF0018 reported (not thrown) when grammar interface has no [Initial] method
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void GrammarInterfaceWithoutInitialMethodReportsSF0018()
+    {
+        string grammar = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface IOrphanGrammar
+    {
+        [TransitionsTo(nameof(B))]
+        void A();
+
+        [TransitionsTo]
+        void B();
+    }
+}";
+
+        CSharpCompilation compilation = CompilationHelper.CreateCompilationWithGrammarSource(grammar);
+        FluidApiSourceGenerator generator = new();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+        driver = driver.RunGenerators(compilation);
+
+        GeneratorDriverRunResult runResult = driver.GetRunResult();
+
+        Diagnostic[] sf0018 = runResult.Results[0].Diagnostics
+            .Where(d => d.Id == "SF0018")
+            .ToArray();
+
+        sf0018.ShouldNotBeEmpty("SF0018 should be reported when a grammar interface is missing [Initial]");
+        sf0018[0].Severity.ShouldBe(DiagnosticSeverity.Error);
+        sf0018[0].GetMessage().ShouldContain("IOrphanGrammar");
+
+        // Generator exception (CS8032-style) must NOT be present — the reader's throw must be
+        // converted to a diagnostic, not escape the generator.
+        Diagnostic[] generatorFailures = runResult.Results[0].Diagnostics
+            .Where(d => d.Id.StartsWith("CS8", System.StringComparison.Ordinal))
+            .ToArray();
+        generatorFailures.ShouldBeEmpty("Reader exception must be converted to a diagnostic, not escape the generator");
+    }
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using SuperFluid.Internal.Definitions;
+using SuperFluid.Internal.Exceptions;
 
 namespace SuperFluid.Internal.Services;
 
@@ -31,7 +32,7 @@ internal class GrammarInterfaceReader
     /// </param>
     /// <returns>A fully populated <see cref="FluidApiDefinition"/> ready for the parser pipeline.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="grammarInterface"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="MissingInitialMethodException">
     /// Thrown when the interface has no method marked <c>[Initial]</c>.
     /// </exception>
     public FluidApiDefinition Read(INamedTypeSymbol grammarInterface)
@@ -53,7 +54,7 @@ internal class GrammarInterfaceReader
 
         if (initialMethodSymbol is null)
         {
-            throw new InvalidOperationException($"Interface '{grammarInterface.Name}' has no method decorated with [Initial].");
+            throw new MissingInitialMethodException(grammarInterface.Name);
         }
 
         FluidApiMethodDefinition initialState = ReadMethod(initialMethodSymbol);

@@ -156,4 +156,13 @@ internal static class DiagnosticDescriptors
 		defaultSeverity: DiagnosticSeverity.Error,
 		isEnabledByDefault: true,
 		description: "An actor must be declared in exactly one place. Remove either the YAML file or the grammar interface.");
+
+	public static readonly DiagnosticDescriptor MissingInitialMethod = new(
+		id: "SF0018",
+		title: "Grammar interface missing [Initial] method",
+		messageFormat: "Grammar interface '{0}' has no method decorated with [Initial]. Mark the entry-point method with [Initial].",
+		category: Category,
+		defaultSeverity: DiagnosticSeverity.Error,
+		isEnabledByDefault: true,
+		description: "Every [FluidApiGrammar] interface must designate exactly one method as the initial state using the [Initial] attribute.");
 }

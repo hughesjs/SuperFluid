@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Shouldly;
 using SuperFluid.Internal.Definitions;
+using SuperFluid.Internal.Exceptions;
 using SuperFluid.Internal.Services;
 
 namespace SuperFluid.Tests.Services;
@@ -357,5 +358,30 @@ namespace Test
         // The fully-qualified display string for System.String
         buildMethod!.ReturnType.ShouldNotBeNull();
         buildMethod.ReturnType!.ShouldContain("string");
+    }
+
+    [Fact]
+    public void ReadThrowsMissingInitialMethodExceptionWhenNoInitialMethodPresent()
+    {
+        string source = @"
+using SuperFluid;
+namespace Test
+{
+    [FluidApiGrammar]
+    internal interface IOrphanGrammar
+    {
+        [TransitionsTo(nameof(B))]
+        void A();
+
+        [TransitionsTo]
+        void B();
+    }
+}";
+
+        INamedTypeSymbol symbol = GetInterfaceSymbol(source, "Test.IOrphanGrammar");
+        GrammarInterfaceReader reader = new();
+
+        MissingInitialMethodException ex = Should.Throw<MissingInitialMethodException>(() => reader.Read(symbol));
+        ex.GrammarInterfaceName.ShouldBe("IOrphanGrammar");
     }
 }

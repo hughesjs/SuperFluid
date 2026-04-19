@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using SuperFluid.Internal.Definitions;
 using SuperFluid.Internal.Diagnostics;
+using SuperFluid.Internal.Exceptions;
 using SuperFluid.Internal.Parsers;
 using SuperFluid.Internal.Services;
 using YamlDotNet.Serialization;
@@ -67,8 +68,29 @@ internal class FluidApiSourceGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(grammarInterfaces, (spc, grammarSymbol) =>
         {
-            GrammarInterfaceReader reader = new();
-            FluidApiDefinition definition = reader.Read(grammarSymbol);
+            FluidApiDefinition definition;
+            try
+            {
+                GrammarInterfaceReader reader = new();
+                definition = reader.Read(grammarSymbol);
+            }
+            catch (MissingInitialMethodException ex)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.MissingInitialMethod,
+                    Location.None,
+                    ex.GrammarInterfaceName));
+                return;
+            }
+            catch (Exception ex)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.UnexpectedGenerationError,
+                    Location.None,
+                    ex.Message));
+                return;
+            }
+
             FluidGeneratorService generatorService = new(new FluidApiDefinitionParser());
             GenerationResult result = generatorService.Generate(definition, grammarSymbol.ToDisplayString());
 
